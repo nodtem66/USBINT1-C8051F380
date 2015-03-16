@@ -180,7 +180,8 @@ SEGMENT_VARIABLE(STRING2_DESC[STRING2_LEN], const U8, SEG_CODE) =
    '4', 0,
    'b', 0,
    'y', 0,
-   't', 0
+   't', 0,
+   'e', 0
 };
 
 SEGMENT_VARIABLE_SEGMENT_POINTER(STRING_DESC_TABLE[], U8, const SEG_CODE, const SEG_CODE) =

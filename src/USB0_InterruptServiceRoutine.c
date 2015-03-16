@@ -113,9 +113,9 @@ INTERRUPT (Usb_ISR, USB0_IRQn)
    }
    if (bIn & rbIN3)                 // Handle In packet Endpoint 3 sent, put
    {                                // new data on endpoint 3 fifo
-      flowFlag++;
+      //flowFlag++;
       Handle_In3 ();
-      flowFlagC--;
+      //flowFlagC--;
    }
    if (bOut & rbOUT1)               // Handle Out packet received, take
    {                                // data off endpoint 1 fifo
@@ -562,6 +562,7 @@ static void Send_Packet_ISR()
       if ( !(controlReg & rbINPRDY) )
       {
          // Put new data to FIFO
+         In3_Packet[1]++;
          Fifo_Write_InterruptServiceRoutine(FIFO_EP3, IN_EP3_PACKET_SIZE, In3_Packet);
 
          // Set In Packet ready bit, indicating a packet is ready
