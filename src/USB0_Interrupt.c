@@ -40,6 +40,7 @@
 #include "USB0_Register.h"
 #include "USBINT1_Main.h"
 #include "UART1_ATCommand.h"
+#include "SPI0_TI.h"
 
 #if TARGET_MCU != MCU_F380
 #error Invalid TARGET_MCU definition
@@ -185,6 +186,30 @@ void UART1_Init(void)
                                        //enable baud rate generator
    SCON1 |= SCON1_TI__SET;             //set ready to TX
 }
+
+//-----------------------------------------------------------------------------
+// SPI_Init
+//-----------------------------------------------------------------------------
+// SPI0 initialled by following step
+// - disable SPI0
+// - set MASTER MODE
+// - set 4-wire configuration
+// - set CLKPOL and CLKPHA
+// - enable SPI0
+//-----------------------------------------------------------------------------
+void SPI0_Init(void)
+{
+   SPI0CN_SPIEN = SPI0CN_SPIEN__DISABLED;
+
+   // set 4-wire single master; NSS signal is an active-low output
+   SPI0CN |= SPI0CN_NSSMD__4_WIRE_MASTER_NSS_LOW;
+   SPI0CFG = SPI0CFG_CKPHA__DATA_CENTERED_FIRST | SPI0CFG_CKPOL__IDLE_LOW |
+         SPI0CFG_MSTEN__MASTER_ENABLED;
+   SPI0CKR = SYSCLK / (2* 500000)-1;
+   SPI0CN_SPIEN = SPI0CN_SPIEN__ENABLED;
+   IE_ESPI0 = 1; // enable SPI interrupt
+   readySPIEnd = 0; // reset SPI flag
+}
 //-----------------------------------------------------------------------------
 // USB0_Suspend
 //-----------------------------------------------------------------------------
@@ -269,22 +294,47 @@ void Sysclk_Init (void)
 //
 // This function configures the crossbar and GPIO ports.
 //
-// P0.0   digital   push-pull    SYSCLK 24 Hz
-// P0.1   digital   push-pull    GPIO Output TX1
-// P0.2   digital   open-drain   GPIO Input RX1
-// P0.3   digital   push-pull    interrupt toggle
-// P0.4   digital   push-pull    reset toggle
-//
-// P2.5   analog                 Potentiometer
-//
+// P0.0  -  Skipped,     Push-Pull,  Digital }
+// P0.1  -  Skipped,     Push-Pull,  Digital |
+// P0.2  -  Skipped,     Push-Pull,  Digital
+// P0.3  -  Skipped,     Push-Pull,  Digital
+// P0.4  -  Skipped,     Push-Pull,  Digital debugging
+// P0.5  -  Skipped,     Push-Pull,  Digital  /
+// P0.6  -  Skipped,     Push-Pull,  Digital |
+// P0.7  -  Skipped,     Push-Pull,  Digital }
+
+// P1.0  -  Skipped,     Open-Drain, Digital
+// P1.1  -  Skipped,     Open-Drain, Digital
+// P1.2  -  Skipped,     Open-Drain, Digital
+// P1.3  -  Skipped,     Open-Drain, Digital
+// P1.4  -  Skipped,     Open-Drain, Digital
+// P1.5  -  Skipped,     Open-Drain, Digital
+// P1.6  -  Skipped,     Open-Drain, Digital
+// P1.7  -  Skipped,     Open-Drain, Digital
+
+// P2.0  -  SCK  (SPI0), Open-Drain, Digital
+// P2.1  -  MISO (SPI0), Open-Drain, Digital
+// P2.2  -  MOSI (SPI0), Open-Drain, Digital
+// P2.3  -  NSS  (SPI0), Open-Drain, Digital
+// P2.4  -  SYSCLK,      Open-Drain, Digital
+// P2.5  -  Skipped,     Open-Drain, Analog   temperature
+// P2.6  -  TX1 (UART1), Open-Drain, Digital
+// P2.7  -  RX1 (UART1), Open-Drain, Digital
+
 //-----------------------------------------------------------------------------
 void Port_Init (void)
 {
-   P2MDIN    = 0xDF; // P2.5 is analog
+   P2MDIN    = 0xDF; // P2.5 is analog for temperature sensor
+   P2MDOUT   = 0x5D; // 0101 1101 P2.7-P2.0
    P0MDOUT   = 0xFB;
-   XBR0      = 0x08; // Enable SYSCLK
-   XBR1      = 0x40; // Enable the crossbar
-   XBR2      = 0x01; // Enable UART1
+
+   P0SKIP    = 0xFF; // Skip all Port0 pin
+   P1SKIP    = 0xFF; // Skip all Port1 pin
+   P2SKIP    = 0x20; // Skip P2.5 for temperature sensor
+   XBR0      = XBR0_SPI0E__ENABLED     // Enable SPI0
+               | XBR0_SYSCKE__ENABLED; // Enable SYSCLK
+   XBR1      = XBR1_XBARE__ENABLED; // Enable the crossbar
+   XBR2      = XBR2_URT1E__ENABLED; // Enable UART1
 
    P0_B3     = 0;    // Reset P0.3 to 0
    P0_B4     = 0;    // Reset P0.4 to 0
@@ -454,6 +504,33 @@ INTERRUPT(UART1_ISR, UART1_IRQn)
       while (SCON1 & SCON1_RI__SET) // if FIFO is not empty, rx will not clear
       {
          read_char_isr();
+      }
+   }
+}
+//-----------------------------------------------------------------------------
+// SPI0_ISR
+//-----------------------------------------------------------------------------
+//
+// called when byte transferred (both transmitted and received)
+//
+//-----------------------------------------------------------------------------
+INTERRUPT (SPI0_ISR, SPI0_IRQn)
+{
+   // write collision interrupt
+   if (SPI0CN_WCOL)
+   {
+      SPI0CN_WCOL = SPI0CN_WCOL__NOT_SET;
+   }
+   // SPI0 transfer interrupt
+   if (SPI0CN_SPIF)
+   {
+      SPI0CN_SPIF = 0;
+      SPI0CN_MODF = 0;
+      // if last byte to transfer
+      if (readySPIEnd)
+      {
+         SPI0CN_NSSMD0 = 1; //active NSS
+         readySPIEnd = 0; // reset flag
       }
    }
 }

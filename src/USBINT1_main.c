@@ -46,6 +46,7 @@
 #include "USB0_Descriptor.h"
 #include "USBINT1_Main.h"
 #include "UART1_ATCommand.h"
+#include "SPI0_TI.h"
 
 //-----------------------------------------------------------------------------
 // Global Variables
@@ -80,11 +81,23 @@ void main(void)
    System_Init ();                     // Initialize Sysclk, Port IO, Timer2, ADC0
    USB0_Init ();                       // Initialize USB0
    UART1_Init ();                      // Initial UART1
-
-
+   SPI0_Init();                        // Inital SPI0
 
    IE_EA = 1;                             // Enable global interrupts
    IE_EA = 1;
+
+   while (1) {
+      while(!SPI0CN_NSSMD0); // Wait until the SPI is free, in case
+
+      SPI_START();
+      WRITE_SPI(0xFF);
+      WRITE_SPI(0xAA);
+      WRITE_SPI(0x01);
+      WRITE_SPI(0x02);
+      WRITE_SPI(0x0C);
+      SPI_END();
+      Delay();
+   }
 
    while (1)
    {
