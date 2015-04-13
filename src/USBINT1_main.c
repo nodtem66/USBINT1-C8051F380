@@ -76,28 +76,16 @@ void main(void)
    for (i = 0; i < sizeof (Out_Packet); i++)
       Out_Packet[i] = 0;
    for (i = 0; i < sizeof (In3_Packet); i++)
-      In3_Packet[i] = 1;
+      In3_Packet[i] = 0;
 
    System_Init ();                     // Initialize Sysclk, Port IO, Timer2, ADC0
    USB0_Init ();                       // Initialize USB0
    UART1_Init ();                      // Initial UART1
    SPI0_Init();                        // Inital SPI0
+   PCA0_Init();
 
    IE_EA = 1;                             // Enable global interrupts
    IE_EA = 1;
-
-   while (1) {
-      while(!SPI0CN_NSSMD0); // Wait until the SPI is free, in case
-
-      SPI_START();
-      WRITE_SPI(0xFF);
-      WRITE_SPI(0xAA);
-      WRITE_SPI(0x01);
-      WRITE_SPI(0x02);
-      WRITE_SPI(0x0C);
-      SPI_END();
-      Delay();
-   }
 
    while (1)
    {
@@ -106,8 +94,8 @@ void main(void)
       //Send_Packet_Foreground();
       //IE_EA = EA_Save;                    // Reenable global interrupts
       //In_Packet[3] = 0x01;
-      In_Packet[4] = Temperature;
-      In3_Packet[0] = Temperature;
+      //In_Packet[4] = Temperature;
+      //In3_Packet[0] = Temperature;
 
       if (readyUART1 & READY_READ)
       {

@@ -80,6 +80,7 @@ void USB0_Suspend (void);              // Suspend System
 void Delay (void);                     // Approximately 80 us/1 ms on
                                        // Full/Low Speed
 void UART1_Init (void);                // configure UART1
+void PCA0_Init (void);                 // configure PCA for external interrupts
 
 //-----------------------------------------------------------------------------
 // Global Variables
@@ -124,7 +125,7 @@ void System_Init (void)
    Port_Init ();                       // Initialize crossbar and GPIO
    Timer2_Init ();                     // Initialize Timer2
    Timer3_Init ();                     // Initialize Timer3
-   ADC0_Init ();                       // Initialize ADC0
+   //ADC0_Init ();                       // Initialize ADC0
 }
 
 //-----------------------------------------------------------------------------
@@ -312,28 +313,36 @@ void Sysclk_Init (void)
 // P1.6  -  Skipped,     Open-Drain, Digital
 // P1.7  -  Skipped,     Open-Drain, Digital
 
-// P2.0  -  SCK  (SPI0), Open-Drain, Digital
-// P2.1  -  MISO (SPI0), Open-Drain, Digital
-// P2.2  -  MOSI (SPI0), Open-Drain, Digital
-// P2.3  -  NSS  (SPI0), Open-Drain, Digital
-// P2.4  -  SYSCLK,      Open-Drain, Digital
-// P2.5  -  Skipped,     Open-Drain, Analog   temperature
-// P2.6  -  TX1 (UART1), Open-Drain, Digital
-// P2.7  -  RX1 (UART1), Open-Drain, Digital
+// P2.0  -  SCK  (SPI0), Open-Drain, Digital -- SCLK
+// P2.1  -  MISO (SPI0), Open-Drain, Digital -- SPISOMI
+// P2.2  -  MOSI (SPI0), Open-Drain, Digital -- SPISIMO
+// P2.3  -  NSS  (SPI0), Open-Drain, Digital -- SPISTE
+// P2.4  -  Skipped,     Open-Drain, Digital -- CLKOUT
+// P2.5  -  CEX0  (PCA), Open-Drain, Digital -- ADC_RDY
+// P2.6  -  CEX1  (PCA), Open-Drain, Digital -- PD_ALM
+// P2.7  -  Skipped,     Open-Drain, Digital
 
+// P3.0  -  CEX2  (PCA), Open-Drain, Digital -- DIAG_END
+// P3.1  -  CEX3  (PCA), Open-Drain, Digital -- LED_ALM
+// P3.2  -  Skipped,     Open-Drain, Digital
+// P3.3  -  Skipped,     Open-Drain, Digital
+// P3.4  -  Skipped,     Open-Drain, Digital
+// P3.5  -  Skipped,     Open-Drain, Digital
+// P3.6  -  TX1 (UART1), Open-Drain, Digital
+// P3.7  -  RX1 (UART1), Open-Drain, Digital
 //-----------------------------------------------------------------------------
 void Port_Init (void)
 {
-   P2MDIN    = 0xDF; // P2.5 is analog for temperature sensor
-   P2MDOUT   = 0x5D; // 0101 1101 P2.7-P2.0
-   P0MDOUT   = 0xFB;
+   //P2MDIN    = 0xDF; // P2.5 is analog for temperature sensor
+   P2MDOUT   = 0x3D; // 0011 1101 P2.7-P2.0
+   P0MDOUT   = 0xFB; // 1111 1011 P0.7-P0.0
 
    P0SKIP    = 0xFF; // Skip all Port0 pin
    P1SKIP    = 0xFF; // Skip all Port1 pin
-   P2SKIP    = 0x20; // Skip P2.5 for temperature sensor
-   XBR0      = XBR0_SPI0E__ENABLED     // Enable SPI0
-               | XBR0_SYSCKE__ENABLED; // Enable SYSCLK
-   XBR1      = XBR1_XBARE__ENABLED; // Enable the crossbar
+   P2SKIP    = 0x90; // Skip P2.4 P2.7
+   P3SKIP    = 0x3C; // Skip P3.2 - P3.5
+   XBR0      = XBR0_SPI0E__ENABLED; // Enable SPI0
+   XBR1      = XBR1_XBARE__ENABLED | 0x0C; // Enable the crossbar
    XBR2      = XBR2_URT1E__ENABLED; // Enable UART1
 
    P0_B3     = 0;    // Reset P0.3 to 0
@@ -412,6 +421,13 @@ void ADC0_Init (void)
    EIE1   |= 0x08;                     // Enable conversion complete interrupt
 }
 
+void PCA0_Init (void)
+{
+   EIE1 |= EIE1_EPCA0__ENABLED;       // enable pca0 interrupts
+   PCA0CPM0 = PCA0CPM0_CAPP__ENABLED  // enable Capture positive function
+            | PCA0CPM0_ECCF__ENABLED; // enable capture/compare flag interrupt
+   PCA0CN = PCA0CN_CR__RUN;           // run PCA counter/timer
+}
 //-----------------------------------------------------------------------------
 // Interrupt Service Routines
 //-----------------------------------------------------------------------------
@@ -533,6 +549,24 @@ INTERRUPT (SPI0_ISR, SPI0_IRQn)
          readySPIEnd = 0; // reset flag
       }
    }
+}
+//-----------------------------------------------------------------------------
+// PCA0_ISR
+//-----------------------------------------------------------------------------
+//
+// called when ADC_READY ON CEX0
+//
+//-----------------------------------------------------------------------------
+INTERRUPT (PCA0_ISR, PCA0_IRQn)
+{
+   if (PCA0CN_CCF0)
+   {
+      PCA0CN_CCF0 = 0;
+      In_Packet[0]++;
+      //TODO: Get LEDVAL from AFE4490
+   }
+   PCA0CN_CCF1 = 0;
+   PCA0CN &= ~0x0E;
 }
 
 //-----------------------------------------------------------------------------

@@ -61,6 +61,7 @@ void System_Init (void);
 void USB0_Init (void);
 void UART1_Init (void);
 void SPI0_Init (void);
+void PCA0_Init (void);
 void Delay (void);
 
 //-----------------------------------------------------------------------------
@@ -73,5 +74,6 @@ INTERRUPT_PROTO (ADC0_ConvComplete_ISR, ADC0EOC_IRQn);
 INTERRUPT_PROTO (Usb_ISR, USB0_IRQn);
 INTERRUPT_PROTO (UART1_ISR, UART1_IRQn);
 INTERRUPT_PROTO (SPI0_ISR, SPI0_IRQn);
+INTERRUPT_PROTO (PCA0_ISR, PCA0_IRQn);
 
 #endif // _USB_DESC_H_

@@ -68,7 +68,7 @@ SEGMENT_VARIABLE(CONFIG_DESC, const Configuration_Descriptor, SEG_CODE) =
    0x01,                // bConfigurationValue
    0x00,                // iConfiguration
    0x80,                // bmAttributes (Bus-powered)
-   0x14                 // bMaxPower (40mA)
+   0xFA                 // bMaxPower (500mA)
 };
 SEGMENT_VARIABLE(INTERFACE_INTERRUPT_DESC, const Interface_Descriptor, SEG_CODE) =
 {
