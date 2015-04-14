@@ -87,6 +87,11 @@ void main(void)
    IE_EA = 1;                             // Enable global interrupts
    IE_EA = 1;
 
+   //Init AFE4490 Board
+   In_Packet[7]++;
+   AFE4490Init();
+   In_Packet[7]++;
+
    while (1)
    {
       //EA_Save = IE_EA;
@@ -96,7 +101,10 @@ void main(void)
       //In_Packet[3] = 0x01;
       //In_Packet[4] = Temperature;
       //In3_Packet[0] = Temperature;
-
+      In_Packet[3] = PCA0CN;
+      In_Packet[4] = PCA0CPM0;
+      In_Packet[5] = PCA0L;
+      In_Packet[6] = PCA0H;
       if (readyUART1 & READY_READ)
       {
          //P0_B4 ^= 1;

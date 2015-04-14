@@ -18,15 +18,16 @@ U8 readySPIEnd=0;
 void AFE4490Write(U8 Address, U32 Data)
 {
    // Wait until the SPI is free
+
    while(!SPI0CN_NSSMD0);
 
    SPI_START(); // enable device
+
    WRITE_SPI(Address); // send address 8 bit
    // send data MSB first
    WRITE_SPI((Data >> 16) & 0xFF); // send top 8 bit
    WRITE_SPI((Data >> 8) & 0xFF); // send middle 8 bit
    WRITE_SPI(Data & 0xFF); // send bottom 8 bit
-
    SPI_END(); // disable device
 
    In_Packet[INEP0_SPI_TX_CNT]++;
@@ -114,7 +115,7 @@ void AFE4490Init() {
    AFE4490Write(LED2ENDC, 7998);    // LED2 stop sample
    AFE4490Write(LED2LEDENDC, 7999); // LED2 turn off
 
-   AFE4490Write(CONTROL1, CONTROL1_TIMEREN_SET | (CONTROL1_AVERAGE_MARK & 9));
+   AFE4490Write(CONTROL1, CONTROL1_TIMEREN_SET | (CONTROL1_AVERAGE_MARK & 7));
    AFE4490Write(TIAGAIN, 0);
    AFE4490Write(TIA_AMB_GAIN, 0);
    AFE4490Write(LEDCNTRL, 0x003030); // LED Bightness config
