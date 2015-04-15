@@ -69,6 +69,7 @@ U8 flowFlagC = 0xFF;
 void main(void)
 {
    U16 i;
+   U32 buffer;
 
    // Initialize packets to 0
    for (i = 0; i < sizeof (In_Packet); i++)
@@ -88,23 +89,34 @@ void main(void)
    IE_EA = 1;
 
    //Init AFE4490 Board
-   In_Packet[7]++;
    AFE4490Init();
    In_Packet[7]++;
 
    while (1)
    {
-      //EA_Save = IE_EA;
-      //IE_EA = 0;                          // Disable global interrupts
-      //Send_Packet_Foreground();
-      //IE_EA = EA_Save;                    // Reenable global interrupts
-      //In_Packet[3] = 0x01;
-      //In_Packet[4] = Temperature;
-      //In3_Packet[0] = Temperature;
-      In_Packet[3] = PCA0CN;
-      In_Packet[4] = PCA0CPM0;
-      In_Packet[5] = PCA0L;
-      In_Packet[6] = PCA0H;
+      if (readySPI & READY_ADC_RDY) {
+         readySPI &= ~READY_ADC_RDY; // clear ADC_RDY flag
+         if (countADC_RDY >= 4) {
+            //SPI_FLUSH();
+            buffer = AFE4490Read(LED2ABSVAL); // read LED2 val
+            // store 22bit in Big-endian (MSB in Lowest address)
+            In3_Packet[0] = (buffer & 0x3F0000);
+            In3_Packet[1] = (buffer & 0x00FF00);
+            In3_Packet[2] = (buffer & 0x0000FF);
+
+            buffer = AFE4490Read(LED1ABSVAL); // read LED1 val
+            In3_Packet[3] = (buffer & 0x3F0000);
+            In3_Packet[4] = (buffer & 0x00FF00);
+            In3_Packet[5] = (buffer & 0x0000FF);
+
+            buffer = AFE4490Read(ALED2VAL); // read ambient LED2 val
+            buffer += AFE4490Read(ALED1VAL); // read ambient LED1 val
+            In_Packet[4] = (buffer & 0x3F0000);
+            In_Packet[5] = (buffer & 0x00FF00);
+            In_Packet[6] = (buffer & 0x0000FF);
+            countADC_RDY = 0;
+         }
+      }
       if (readyUART1 & READY_READ)
       {
          //P0_B4 ^= 1;

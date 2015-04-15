@@ -2,7 +2,7 @@
  * SPI0_TI.c
  *
  *  Created on: 18 Mar 2015
- *      Author: jirawat
+ *      Author: Jirawat I.
  */
 
 #include "c8051f3xx.h"
@@ -10,8 +10,9 @@
 #include "USBINT1_Main.h"
 #include "USB0_InterruptServiceRoutine.h"
 
-// SPI flag to triggle NSS
-U8 readySPIEnd=0;
+// SPI flag to trigger NSS
+U8 readySPI;
+U8 countADC_RDY=0;
 
 // AFE4490Write(address, data)
 // write the 24bit data to 8bit address
@@ -41,7 +42,6 @@ U32 AFE4490Read(U8 Address)
    U8 buffer;
    // Wait until the SPI is free
    while(!SPI0CN_NSSMD0);
-
    SPI_START(); // enable device
    WRITE_SPI(Address); // send address 8 bit
    READ_SPI(buffer); // get first MSB 8bit
@@ -51,7 +51,6 @@ U32 AFE4490Read(U8 Address)
    READ_SPI(buffer); // get LSB 8 bit
    Data |= (buffer & 0x0000FF);
    SPI_END(); // disable device
-
    In_Packet[INEP0_SPI_RX_CNT]++;
    return Data;
 }

@@ -75,8 +75,7 @@ void Timer3_Init(void);               // Configure Timer3
 void ADC0_Init(void);                 // Configure ADC0
 void USB0_Init(void);                 // Configure USB core
 void USB0_Suspend(void);              // Suspend System
-void Delay(void);                     // Approximately 80 us/1 ms on
-// Full/Low Speed
+void Delay(void);                     // About 80us/1ms on Full/LowSpeed
 void UART1_Init(void);                // configure UART1
 void PCA0_Init(void);                 // configure PCA for external interrupts
 
@@ -114,13 +113,13 @@ U8 Temperature = 0x00;                   // Last read temperature sensor value
 //-----------------------------------------------------------------------------
 void System_Init(void)
 {
-   PCA0MD &= ~0x40;                    // Disable watchdog timer
+   PCA0MD &= ~0x40;                   // Disable watchdog timer
 
    Sysclk_Init();                     // Initialize oscillator
    Port_Init();                       // Initialize crossbar and GPIO
    Timer2_Init();                     // Initialize Timer2
    Timer3_Init();                     // Initialize Timer3
-   //ADC0_Init ();                       // Initialize ADC0
+   //ADC0_Init ();                    // Initialize ADC0
 }
 
 //-----------------------------------------------------------------------------
@@ -135,33 +134,25 @@ void System_Init(void)
 //-----------------------------------------------------------------------------
 void USB0_Init(void)
 {
-   POLL_WRITE_BYTE(POWER, 0x08);     // Force Asynchronous USB Reset
-   POLL_WRITE_BYTE(IN1IE, 0x0F);     // Enable Endpoint 0,1, and 3 in interrupts
-   POLL_WRITE_BYTE(OUT1IE, 0x02);     // Enable Endpoint 1 out interrupts
+   POLL_WRITE_BYTE(POWER, 0x08);    // Force Asynchronous USB Reset
+   POLL_WRITE_BYTE(IN1IE, 0x0F);    // Enable Endpoint 0,1, and 3 in interrupts
+   POLL_WRITE_BYTE(OUT1IE, 0x02);   // Enable Endpoint 1 out interrupts
    POLL_WRITE_BYTE(CMIE, 0x0F);     // Enable SOF, Reset, Resume, and Suspend
                                     // interrupts
 
 #ifdef _USB_LOW_SPEED_
-   USB0XCN = 0xC0;                     // Enable transceiver; select low speed
-   POLL_WRITE_BYTE (CLKREC, 0xA9);// Enable clock recovery, single-step
-                                  // mode disabled
+   USB0XCN = 0xC0;                  // Enable transceiver; select low speed
+   POLL_WRITE_BYTE (CLKREC, 0xA9);  // Enable clock recovery, single-step
+                                    // mode disabled
 #else
-   USB0XCN = 0xE0;                     // Enable transceiver; select full speed
-   POLL_WRITE_BYTE(CLKREC, 0x89);     // Enable clock recovery, single-step
-                                      // mode disabled
+   USB0XCN = 0xE0;                  // Enable transceiver; select full speed
+   POLL_WRITE_BYTE(CLKREC, 0x89);   // Enable clock recovery, single-step
+                                    // mode disabled
 #endif // _USB_LOW_SPEED_
-   EIE1 |= 0x02;                       // Enable USB0 Interrupts
+   EIE1 |= 0x02;                    // Enable USB0 Interrupts
 
    // Enable USB0 by clearing the USB
    POLL_WRITE_BYTE(POWER, POWER_ISOUD__SOF_TOKEN | POWER_SUSEN__ENABLED);
-   // Inhibit Bit, enable suspend
-   // detection and ISO Update feature
-
-   //POLL_WRITE_BYTE (INDEX, 3)           // Select endpoint 3 for config
-   // isochronous mode
-   //POLL_WRITE_BYTE (EINCSRH, EINCSRH_DIRSEL__IN);
-   //POLL_WRITE_BYTE(EINCSRH, EINCSRH_ISO__ENABLED | EINCSRH_DBIEN__ENABLED)
-   // Enable double buffer and isochronous mode
 }
 
 //-----------------------------------------------------------------------------
@@ -173,13 +164,14 @@ void USB0_Init(void)
 void UART1_Init(void)
 {
    EIE2 |= EIE2_ES1__ENABLED;          //enable UART1 Interrupt
-   SCON1 = SCON1_REN__RECEIVE_ENABLED;          //enable UART1 reception
-   SMOD1 =
-         SMOD1_PE__PARITY_ENABLED | SMOD1_SDL__8_BITS | SMOD1_SPT__EVEN_PARITY;
-   //configure 8 bit even parity
+   SCON1 = SCON1_REN__RECEIVE_ENABLED; //enable UART1 reception
+   SMOD1 = SMOD1_PE__PARITY_ENABLED    //configure 8 bit even parity
+         | SMOD1_SDL__8_BITS | SMOD1_SPT__EVEN_PARITY;
+
    SBRL1 = 0xFB1E;                     //configure buad rate for 9600
-   SBCON1 = SBCON1_SBRUN__ENABLED | SBCON1_SBPS__DIV_BY_1;
-   //enable baud rate generator
+   SBCON1 = SBCON1_SBRUN__ENABLED      //enable baud rate generator
+         | SBCON1_SBPS__DIV_BY_1;
+
    SCON1 |= SCON1_TI__SET;             //set ready to TX
 }
 
@@ -203,8 +195,8 @@ void SPI0_Init(void)
          | SPI0CFG_MSTEN__MASTER_ENABLED;
    SPI0CKR = SYSCLK / (2 * 500000) - 1;
    SPI0CN_SPIEN = SPI0CN_SPIEN__ENABLED;
-   IE_ESPI0 = 1; // enable SPI interrupt
-   readySPIEnd = 0; // reset SPI flag
+   IE_ESPI0 = 1;  // enable SPI interrupt
+   readySPI = 0;  // reset SPI flag
 }
 //-----------------------------------------------------------------------------
 // USB0_Suspend
@@ -219,7 +211,7 @@ void USB0_Suspend(void)
    // Power Down
 
    ADC0CN = 0x00;             // Disable ADC0
-   IE_EA = 0;                    // Disable global interrupts
+   IE_EA = 0;                 // Disable global interrupts
    REF0CN = 0x00;             // Disable voltage references
    XBR1 &= ~0x40;             // Disengage the crossbar
 
@@ -328,17 +320,15 @@ void Sysclk_Init(void)
 //-----------------------------------------------------------------------------
 void Port_Init(void)
 {
-   //P2MDIN    = 0xDF; // P2.5 is analog for temperature sensor
-   //P2MDOUT = 0x3D; // 0011 1101 P2.7-P2.0
    P0MDOUT = 0xFB; // 1111 1011 P0.7-P0.0
 
    P0SKIP = 0xFF; // Skip all Port0 pin
    P1SKIP = 0xFF; // Skip all Port1 pin
    P2SKIP = 0x90; // Skip P2.4 P2.7
    P3SKIP = 0x3C; // Skip P3.2 - P3.5
-   XBR0 = XBR0_SPI0E__ENABLED; // Enable SPI0
-   XBR1 = XBR1_XBARE__ENABLED | 0x04; // Enable the crossbar
-   XBR2 = XBR2_URT1E__ENABLED; // Enable UART1
+   XBR0 = XBR0_SPI0E__ENABLED;        // Enable SPI0
+   XBR1 = XBR1_XBARE__ENABLED | 0x04; // Enable the crossbar and PCA0 (CEX0-3)
+   XBR2 = XBR2_URT1E__ENABLED;        // Enable UART1
 
    P0_B3 = 0;    // Reset P0.3 to 0
    P0_B4 = 0;    // Reset P0.4 to 0
@@ -361,14 +351,14 @@ void Port_Init(void)
 //-----------------------------------------------------------------------------
 void Timer2_Init(void)
 {
-   TMR2CN = 0x00;                     // Stop Timer2; Clear TF2;
+   TMR2CN = 0x00;           // Stop Timer2; Clear TF2;
 
    CKCON &= ~0xF0;          // Timer2 clocked based on TMR2CN_T2XCLK (SYSCLK/12)
-   TMR2RL = 0x10000 - 40000;          // Initialize reload value
-   TMR2 = 0xffff;                   // Set to reload immediately
+   TMR2RL = 0x10000 - 40000;// Initialize reload value
+   TMR2 = 0xffff;           // Set to reload immediately
 
-   IE_ET2 = 1;                     // Enable Timer2 interrupts
-   TMR2CN_TR2 = 1;                     // Start Timer2
+   IE_ET2 = 1;              // Enable Timer2 interrupts
+   TMR2CN_TR2 = 1;          // Start Timer2
 }
 
 //-----------------------------------------------------------------------------
@@ -541,10 +531,10 @@ INTERRUPT (SPI0_ISR, SPI0_IRQn)
       SPI0CN_SPIF = 0;
       SPI0CN_MODF = 0;
       // if last byte to transfer
-      if (readySPIEnd)
+      if (readySPI & READY_SPI_END)
       {
-         SPI0CN_NSSMD0 = 1; //active NSS
-         readySPIEnd = 0; // reset flag
+         SPI0CN_NSSMD0 = 1; //active NSS (deselect device)
+         readySPI &= ~READY_SPI_END; // reset flag
       }
    }
 }
@@ -557,17 +547,12 @@ INTERRUPT (SPI0_ISR, SPI0_IRQn)
 //-----------------------------------------------------------------------------
 INTERRUPT (PCA0_ISR, PCA0_IRQn)
 {
-   In_Packet[7]++;
    if (PCA0CN_CCF0)
    {
       PCA0CN_CCF0 = 0;
       In_Packet[0]++;
-      PCA0CPH0 = 0;
-      PCA0CPL0 = 0;
-      //TODO: Get LEDVAL from AFE4490
-      //SPI_START();
-      //AFE4490Read()
-      //SPI_END();
+      countADC_RDY++;
+      readySPI |= (READY_ADC_RDY);
    } else {
       PCA0CN_CF &= ~0x8e;
    }

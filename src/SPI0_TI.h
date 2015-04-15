@@ -125,8 +125,10 @@ void AFE4490Init(void);
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-extern U8 readySPIEnd; // flag to triggle NSS
-
+extern U8 readySPI;      // flag 8 bit for SPI Communication
+extern U8 countADC_RDY;  // count for ADC_RDY triggers
+#define READY_SPI_END 1  // flag to trigger NSS
+#define READY_ADC_RDY 2  // flag to trigger Send SPI Read to AFE
 //-----------------------------------------------------------------------------
 // Define macro
 //-----------------------------------------------------------------------------
@@ -134,8 +136,12 @@ extern U8 readySPIEnd; // flag to triggle NSS
 //    wait for busy transmit holding register and write a byte to SPI
 //-----------------------------------------------------------------------------
 #define WRITE_SPI(b) while(!SPI0CN_TXBMT); SPI0DAT = (b);
-#define READ_SPI(b) WRITE_SPI(0x00); (b) = SPI0DAT;
-#define SPI_START() readySPIEnd=0; SPI0CN_NSSMD0 = 0;
-#define SPI_END() while(!SPI0CN_TXBMT); readySPIEnd=1;
-
+#define READ_SPI(b) while(!SPI0CN_TXBMT); \
+      while((SPI0CFG & SPI0CFG_SPIBSY__SET)); \
+      SPI0DAT = 0; b = SPI0DAT;
+#define SPI_START() readySPI &= ~READY_SPI_END; SPI0CN_NSSMD0 = 0;
+//#define SPI_END() while(!SPI0CN_TXBMT); readySPI |= READY_SPI_END;
+#define SPI_END() while(!SPI0CN_TXBMT); \
+   while((SPI0CFG & SPI0CFG_SPIBSY__SET)); \
+   readySPI |= READY_SPI_END; SPI0CN_NSSMD0 = 1;
 #endif /* SPI0_TI_H_ */
