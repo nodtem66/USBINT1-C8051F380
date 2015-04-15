@@ -31,3 +31,6 @@
 # simplicity studio
 *Debug/*
 *Keil*/*
+
+# liner shell history file
+*.*

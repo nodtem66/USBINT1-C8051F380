@@ -300,10 +300,10 @@ void Sysclk_Init(void)
 // P1.6  -  Skipped,     Open-Drain, Digital
 // P1.7  -  Skipped,     Open-Drain, Digital
 
-// P2.0  -  SCK  (SPI0), Open-Drain, Digital -- SCLK
+// P2.0  -  SCK  (SPI0), Push-Pull, Digital -- SCLK
 // P2.1  -  MISO (SPI0), Open-Drain, Digital -- SPISOMI
-// P2.2  -  MOSI (SPI0), Open-Drain, Digital -- SPISIMO
-// P2.3  -  NSS  (SPI0), Open-Drain, Digital -- SPISTE
+// P2.2  -  MOSI (SPI0), Push-Pull, Digital -- SPISIMO
+// P2.3  -  NSS  (SPI0), Push-Pull, Digital -- SPISTE
 // P2.4  -  Skipped,     Open-Drain, Digital -- CLKOUT
 // P2.5  -  CEX0  (PCA), Open-Drain, Digital -- ADC_RDY
 // P2.6  -  CEX1  (PCA), Open-Drain, Digital -- PD_ALM
@@ -321,6 +321,7 @@ void Sysclk_Init(void)
 void Port_Init(void)
 {
    P0MDOUT = 0xFB; // 1111 1011 P0.7-P0.0
+   P2MDOUT   = 0x0D; // for Push-Pull
 
    P0SKIP = 0xFF; // Skip all Port0 pin
    P1SKIP = 0xFF; // Skip all Port1 pin
@@ -535,6 +536,7 @@ INTERRUPT (SPI0_ISR, SPI0_IRQn)
       {
          SPI0CN_NSSMD0 = 1; //active NSS (deselect device)
          readySPI &= ~READY_SPI_END; // reset flag
+         In_Packet[3]++;
       }
    }
 }
