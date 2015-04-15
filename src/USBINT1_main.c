@@ -69,7 +69,6 @@ volatile bit In3PacketLock = 0;
 void main(void)
 {
    U16 i;
-   U32 buffer;
 
    // Initialize packets to 0
    for (i = 0; i < sizeof (In_Packet); i++)
@@ -81,7 +80,7 @@ void main(void)
 
    System_Init ();                     // Initialize Sysclk, Port IO, Timer2, ADC0
    USB0_Init ();                       // Initialize USB0
-   UART1_Init ();                      // Initial UART1
+   //UART1_Init ();                      // Initial UART1
    SPI0_Init();                        // Inital SPI0
    PCA0_Init();
 
@@ -89,43 +88,11 @@ void main(void)
    IE_EA = 1;
 
    //Init AFE4490 Board
-   AFE4490Init();
+   //ADSInit();
+   //In_Packet[4] = ADSRead(ADS_ID);
 
    while (1)
    {
-      if (readySPI & READY_ADC_RDY) {
-         readySPI &= ~READY_ADC_RDY; // clear ADC_RDY flag
-         if (countADC_RDY >= 4) {
-            //SPI_FLUSH();
-            buffer = AFE4490Read(LED2ABSVAL); // read LED2 val
-            // store 22bit in Big-endian (MSB in Lowest address)
-            LOCK(In3PacketLock)
-            In3_Packet[0] = (buffer & 0x3F0000);
-            In3_Packet[1] = (buffer & 0x00FF00);
-            In3_Packet[2] = (buffer & 0x0000FF);
-            UNLOCK(In3PacketLock)
 
-            buffer = AFE4490Read(LED1ABSVAL); // read LED1 val
-            LOCK(In3PacketLock)
-            In3_Packet[3] = (buffer & 0x3F0000);
-            In3_Packet[4] = (buffer & 0x00FF00);
-            In3_Packet[5] = (buffer & 0x0000FF);
-            UNLOCK(In3PacketLock)
-
-            buffer = AFE4490Read(ALED2VAL)/2; // read ambient LED2 val
-            buffer += AFE4490Read(ALED1VAL)/2; // read ambient LED1 val
-            LOCK(InPacketLock)
-            In_Packet[4] = (buffer & 0x3F0000);
-            In_Packet[5] = (buffer & 0x00FF00);
-            In_Packet[6] = (buffer & 0x0000FF);
-            UNLOCK(InPacketLock)
-            countADC_RDY = 0;
-         }
-      }
-      if (readyUART1 & READY_READ)
-      {
-         //P0_B4 ^= 1;
-         run_state_machine ();
-      }
    }
 }

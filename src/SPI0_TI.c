@@ -121,3 +121,87 @@ void AFE4490Init() {
 
    AFE4490Write(CONTROL0, CONTROL0_SPI_READ); // switch to SPI_READ mode
 }
+
+// ADSCommand(command)
+// send command to ADS. normally use with definition ADS_CMD_*
+void ADSCommand(U8 cmd)
+{
+   // Wait until the SPI is free
+   while(!SPI0CN_NSSMD0);
+   SPI_START()
+   WRITE_SPI(cmd)
+   SPI_END()
+}
+
+// ADSWrite(address, value)
+// write one byte to register
+void ADSWrite(U8 address, U8 value)
+{
+   // Wait until the SPI is free
+   while(!SPI0CN_NSSMD0);
+   SPI_START()
+   WRITE_SPI(ADS_CMD_WREG | (address & 0x1F)) // write address
+   WRITE_SPI(0x00) // write <number of register - 1> to write
+   WRITE_SPI(value & 0xFF) // write value to address
+   //WRITE_SPI
+   SPI_END()
+
+   In_Packet[INEP0_SPI_TX_CNT]++;
+}
+
+// ADSRead(address, value)
+// read one byte from register
+U8 ADSRead(U8 address)
+{
+   U8 buffer = 0;
+   // Wait until the SPI is free
+   while(!SPI0CN_NSSMD0);
+   SPI_START()
+   WRITE_SPI(ADS_CMD_RREG | (address & 0x1F)) // write address
+   WRITE_SPI(0x00) // write <number of register - 1> to read
+   READ_SPI(buffer)
+   SPI_END()
+   In_Packet[INEP0_SPI_RX_CNT]++;
+   return buffer;
+}
+void ADSInit()
+{
+   ADSWrite(ADS_CONFIG1, ADS_CONFIG1__HIGH_RES_1K_SPS);
+   // power down REF buffer for internal reference
+   ADSWrite(ADS_CONFIG3, ADS_CONFIG3__DEFAULT | ADS_CONFIG3__PD_REFBUF
+         | ADS_CONFIG3__VREF_4V | ADS_CONFIG3__RLDREF_INT | ADS_CONFIG3__PD_RLD);
+   ADSWrite(ADS_CONFIG4, 0x00);
+
+   ADSWrite(ADS_RLD_SENSP, 0x06);
+   ADSWrite(ADS_RLD_SENSN, 0x06);
+
+
+   // ECG Normal mode
+   ADSWrite(ADS_CONFIG2, 0x00);
+   ADSWrite(ADS_WCT1, ADS_WCT1__PD_WCTA | ADS_WCT1__WCTA_CH2N);
+   ADSWrite(ADS_WCT2, ADS_WCT2__PD_WCTB | ADS_WCT2__PD_WCTC
+         | ADS_WCT2__WCTB_CH2P | ADS_WCT2__WCTC_CH3P);
+   ADSWrite(ADS_CH1SET, ADS_CHSET__GAIN_8X);
+   ADSWrite(ADS_CH2SET, ADS_CHSET__GAIN_8X);
+   ADSWrite(ADS_CH3SET, ADS_CHSET__GAIN_8X);
+   ADSWrite(ADS_CH4SET, ADS_CHSET__GAIN_8X);
+   ADSWrite(ADS_CH5SET, ADS_CHSET__GAIN_8X);
+   ADSWrite(ADS_CH6SET, ADS_CHSET__GAIN_8X);
+   ADSWrite(ADS_CH7SET, ADS_CHSET__GAIN_8X);
+   ADSWrite(ADS_CH8SET, ADS_CHSET__GAIN_8X);
+
+   // ECG Test mode
+   /*
+   ADSWrite(ADS_CONFIG2, ADS_CONFIG2__INT_TEST_4HZ);
+   ADSWrite(ADS_WCT1, 0x00);
+   ADSWrite(ADS_WCT2, 0x00);
+   ADSWrite(ADS_CH1SET, ADS_CHSET__TEST_SIGNAL);
+   ADSWrite(ADS_CH1SET, ADS_CHSET__TEST_SIGNAL);
+   ADSWrite(ADS_CH1SET, ADS_CHSET__TEST_SIGNAL);
+   ADSWrite(ADS_CH1SET, ADS_CHSET__TEST_SIGNAL);
+   ADSWrite(ADS_CH1SET, ADS_CHSET__TEST_SIGNAL);
+   ADSWrite(ADS_CH1SET, ADS_CHSET__TEST_SIGNAL);
+   ADSWrite(ADS_CH1SET, ADS_CHSET__TEST_SIGNAL);
+   ADSWrite(ADS_CH1SET, ADS_CHSET__TEST_SIGNAL);
+   */
+}

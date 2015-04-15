@@ -51,8 +51,8 @@ SEGMENT_VARIABLE(DEVICE_DESC, const Device_Descriptor, SEG_CODE) =
    0x00,                // bDeviceSubClass
    0x00,                // bDeviceProtocol
    EP0_PACKET_SIZE,     // bMaxPacketSize0
-   LE_ARRAY(0x10C4),    // idVendor
-   LE_ARRAY(0x8846),    // idProduct
+   LE_ARRAY(0x10C4),    // idVendor (Silicon Labs.)
+   LE_ARRAY(0x8A40),    // idProduct (our unique PID)
    LE_ARRAY(0x0010),    // bcdDevice (v0.1.0)
    0x01,                // iManufacturer
    0x02,                // iProduct

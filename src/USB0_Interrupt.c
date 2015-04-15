@@ -118,7 +118,7 @@ void System_Init(void)
    Sysclk_Init();                     // Initialize oscillator
    Port_Init();                       // Initialize crossbar and GPIO
    Timer2_Init();                     // Initialize Timer2
-   Timer3_Init();                     // Initialize Timer3
+   //Timer3_Init();                     // Initialize Timer3
    //ADC0_Init ();                    // Initialize ADC0
 }
 
@@ -300,36 +300,35 @@ void Sysclk_Init(void)
 // P1.6  -  Skipped,     Open-Drain, Digital
 // P1.7  -  Skipped,     Open-Drain, Digital
 
-// P2.0  -  SCK  (SPI0), Push-Pull, Digital -- SCLK
-// P2.1  -  MISO (SPI0), Open-Drain, Digital -- SPISOMI
-// P2.2  -  MOSI (SPI0), Push-Pull, Digital -- SPISIMO
-// P2.3  -  NSS  (SPI0), Push-Pull, Digital -- SPISTE
-// P2.4  -  Skipped,     Open-Drain, Digital -- CLKOUT
-// P2.5  -  CEX0  (PCA), Open-Drain, Digital -- ADC_RDY
-// P2.6  -  CEX1  (PCA), Open-Drain, Digital -- PD_ALM
+// P2.0  -  Skipped,     Open-Drain, Digital
+// P2.1  -  Skipped,     Open-Drain, Digital
+// P2.2  -  SCK  (SPI0), Push-Pull,  Digital -- SCLK
+// P2.3  -  MISO (SPI0), Push-Pull,  Digital -- SPIIN
+// P2.4  -  MOSI (SPI0), Open-Drain, Digital -- SPIOUT
+// P2.5  -  NSS  (SPI0), Push-Pull,  Digital -- SPICS
+// P2.6  -  CEX0  (PCA), Open-Drain, Digital -- DRDY
 // P2.7  -  Skipped,     Open-Drain, Digital
 
-// P3.0  -  CEX2  (PCA), Open-Drain, Digital -- DIAG_END
-// P3.1  -  CEX3  (PCA), Open-Drain, Digital -- LED_ALM
-// P3.2  -  Skipped,     Open-Drain, Digital
-// P3.3  -  Skipped,     Open-Drain, Digital
-// P3.4  -  Skipped,     Open-Drain, Digital
-// P3.5  -  Skipped,     Open-Drain, Digital
-// P3.6  -  TX1 (UART1), Open-Drain, Digital
-// P3.7  -  RX1 (UART1), Open-Drain, Digital
+// P3.0  -  Unassigned,  Open-Drain, Digital -- GPIO4
+// P3.1  -  Unassigned,  Open-Drain, Digital -- GPIO3
+// P3.2  -  Unassigned,  Open-Drain, Digital -- GPIO2
+// P3.3  -  Unassigned,  Open-Drain, Digital -- GPIO1
+// P3.4  -  Unassigned,  Open-Drain, Digital -- START
+// P3.5  -  Unassigned,  Open-Drain, Digital
+// P3.6  -  Unassigned,  Open-Drain, Digital
+// P3.7  -  Unassigned,  Open-Drain, Digital
 //-----------------------------------------------------------------------------
 void Port_Init(void)
 {
    P0MDOUT = 0xFB; // 1111 1011 P0.7-P0.0
-   P2MDOUT   = 0x0D; // for Push-Pull
+   P2MDOUT = 0x2C; // for Push-Pull
 
    P0SKIP = 0xFF; // Skip all Port0 pin
    P1SKIP = 0xFF; // Skip all Port1 pin
-   P2SKIP = 0x90; // Skip P2.4 P2.7
-   P3SKIP = 0x3C; // Skip P3.2 - P3.5
+   P2SKIP = 0x83; // Skip P2.4 P2.7
    XBR0 = XBR0_SPI0E__ENABLED;        // Enable SPI0
-   XBR1 = XBR1_XBARE__ENABLED | 0x04; // Enable the crossbar and PCA0 (CEX0-3)
-   XBR2 = XBR2_URT1E__ENABLED;        // Enable UART1
+   XBR1 = XBR1_XBARE__ENABLED | 0x01; // Enable the crossbar and PCA0 (CEX0)
+   //XBR2 = XBR2_URT1E__ENABLED;        // Enable UART1
 
    P0_B3 = 0;    // Reset P0.3 to 0
    P0_B4 = 0;    // Reset P0.4 to 0
@@ -339,25 +338,17 @@ void Port_Init(void)
 //-----------------------------------------------------------------------------
 // Timer2_Init
 //-----------------------------------------------------------------------------
-//
-// Return Value : None
-// Parameters   : None
-// 
-// Timer 2 reload, used to check if switch pressed on overflow and
-// used for ADC continuous conversion.
-//
-// Low-speed reload rate:  25 Hz
-// Full-speed reload rate: 50 Hz
-//
+// Timer 2 reload, used to delay SPI NSS hold active more than 4*T_CLK_ADS
+// Full-speed (SYSCLK: 24 MHz) Based Timer frquency SYSCLK/12 : 2 MHz
+// Note: 4*T_CLK = 1.9532125us (512KHz)
+// This timer reload with 2MHz / 4 = 500KHz
 //-----------------------------------------------------------------------------
 void Timer2_Init(void)
 {
    TMR2CN = 0x00;           // Stop Timer2; Clear TF2;
-
    CKCON &= ~0xF0;          // Timer2 clocked based on TMR2CN_T2XCLK (SYSCLK/12)
-   TMR2RL = 0x10000 - 40000;// Initialize reload value
+   TMR2RL = 0x10000 - 4;    // Initialize reload value
    TMR2 = 0xffff;           // Set to reload immediately
-
    IE_ET2 = 1;              // Enable Timer2 interrupts
    TMR2CN_TR2 = 1;          // Start Timer2
 }
@@ -430,7 +421,11 @@ void PCA0_Init(void)
 //-----------------------------------------------------------------------------
 INTERRUPT (Timer2_ISR, TIMER2_IRQn)
 {
-   TMR2CN_TF2H = 0;
+   TMR2CN_TF2H = 0; // clear timer interrupt flag
+   TMR2CN_TR2 = 0;  // stop timer
+   //TODO: use #3 to debug
+   In_Packet[3]++;
+   SPI0CN_NSSMD0 = 1; //active NSS (deselect device)
 }
 
 //-----------------------------------------------------------------------------
@@ -534,7 +529,6 @@ INTERRUPT (SPI0_ISR, SPI0_IRQn)
       // if last byte to transfer
       if (readySPI & READY_SPI_END)
       {
-         SPI0CN_NSSMD0 = 1; //active NSS (deselect device)
          readySPI &= ~READY_SPI_END; // reset flag
       }
    }

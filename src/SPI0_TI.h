@@ -123,7 +123,7 @@ void AFE4490Init(void);
 #define ADS_CMD_SDATAC  0x11 // Stop read data continuous
 #define ADS_CMD_RDATA   0x12 // read data
 #define ADS_CMD_RREG    0x20 // read register
-#define ADS_CMD_RREG    0x40 // write register
+#define ADS_CMD_WREG    0x40 // write register
 
 // register address
 #define ADS_ID      0x00 // ID of ADS version
@@ -180,6 +180,7 @@ void AFE4490Init(void);
 #define ADS_CONFIG2__INT_TEST_DC  0x13
 
 // CONFIG3: Configuration Register 3
+#define ADS_CONFIG3__DEFAULT       0x30
 #define ADS_CONFIG3__PD_REFBUF     0x80
 #define ADS_CONFIG3__VREF_4V       0x20
 #define ADS_CONFIG3__RLD_MEAS      0x10
@@ -252,6 +253,7 @@ void AFE4490Init(void);
 #define ADS_PACE__PACEO_CHAN7       0x06
 
 //RESP: Respiration Control Register
+#define ADS_RESP__DEFAULT           0x20
 #define ADS_RESP__RESP_DEMOD_EN1    0x80
 #define ADS_RESP__RESP_MOD_EN1      0x40
 #define ADS_RESP__RESP_PH2          0x10
@@ -332,6 +334,13 @@ void AFE4490Init(void);
 #define ADS_WCT2__WCTC_CH4P         0x06
 #define ADS_WCT2__WCTC_CH4N         0x07
 //=============================================================================
+// ADS1298 Helper
+//=============================================================================
+void ADSInit();
+void ADSCommand(U8);
+void ADSWrite(U8, U8);
+U8 ADSRead(U8);
+//=============================================================================
 // SPI Helper
 //=============================================================================
 
@@ -339,8 +348,8 @@ void AFE4490Init(void);
 // -------------------------------------------------------------
 // |  1 byte     | 1 byte     | 1 byte     | ...
 // -------------------------------------------------------------
-// | AFE_RDY_CNT | SPI_RX_CNT | SPI_TX_CNT | ...
-// --------------------------------------------------------------
+// | CEX0_INT    | SPI_RX_CNT | SPI_TX_CNT | ...
+// -------------------------------------------------------------
 #define INEP0_AFE_RDY_CNT 0
 #define INEP0_SPI_RX_CNT  1
 #define INEP0_SPI_TX_CNT  2
@@ -362,8 +371,8 @@ extern U8 countADC_RDY;  // count for ADC_RDY triggers
 #define READ_SPI(b) while(!SPI0CN_TXBMT); \
       while((SPI0CFG & SPI0CFG_SPIBSY__SET)); \
       SPI0DAT = 0; b = SPI0DAT;
-#define SPI_START() readySPI &= ~READY_SPI_END; SPI0CN_NSSMD0 = 0;
-#define SPI_END() while(!SPI0CN_TXBMT); readySPI |= READY_SPI_END;
+#define SPI_START() SPI0CN_NSSMD0 = 0;
+#define SPI_END() while(!SPI0CN_TXBMT); TMR2CN_TR2 = 1;
 /*
 #define SPI_END() while(!SPI0CN_TXBMT); \
    while((SPI0CFG & SPI0CFG_SPIBSY__SET)); \
