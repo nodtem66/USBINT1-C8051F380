@@ -352,11 +352,11 @@ void run_state_machine ()
             {
                WAIT_FOR_TX_COMPLETE();
                GET_OK_STR_BUFFER(Tx_Buffer);
-               WRITE_HEX_TO_BUFFER(Tx_Buffer[2], flowFlag >> 4);
-               WRITE_HEX_TO_BUFFER(Tx_Buffer[3], flowFlag & 0x0F);
-               WRITE_HEX_TO_BUFFER(Tx_Buffer[4], flowFlagC >> 4);
-               WRITE_HEX_TO_BUFFER(Tx_Buffer[5], flowFlagC & 0x0F);
-               send_string(6, Tx_Buffer);
+               //WRITE_HEX_TO_BUFFER(Tx_Buffer[2], flowFlag >> 4);
+               //WRITE_HEX_TO_BUFFER(Tx_Buffer[3], flowFlag & 0x0F);
+               //WRITE_HEX_TO_BUFFER(Tx_Buffer[4], flowFlagC >> 4);
+               //WRITE_HEX_TO_BUFFER(Tx_Buffer[5], flowFlagC & 0x0F);
+               send_string(2, Tx_Buffer);
                state = STATE_IDLE;
             }
             else if (rx_index + 3 < Rx_Buffer_Length && Rx_Buffer[rx_index] == 'E' && Rx_Buffer[rx_index + 1] == 'P')

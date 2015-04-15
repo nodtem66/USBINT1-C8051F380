@@ -25,22 +25,22 @@
 							<targetPlatform binaryParser="com.silabs.ide.si8051.debug.omf.OMF" id="com.silabs.ide.si8051.keil.targetplatform.1259825276" isAbstract="false" superClass="com.silabs.ide.si8051.keil.targetplatform"/>
 							<builder buildPath="${workspace_loc:/usbint1}/Keil 8051 v9.51 - Debug" id="com.silabs.ide.si8051.keil.builder.1739225080" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Keil Builder" parallelBuildOn="false" superClass="com.silabs.ide.si8051.keil.builder"/>
 							<tool id="com.silabs.ide.si8051.keil.toolchain.compiler.931873997" name="Keil 8051 Compiler" superClass="com.silabs.ide.si8051.keil.toolchain.compiler">
-								<option id="com.silabs.ide.si8051.keil.compiler.category.optimization.emphasis.1502787763" superClass="com.silabs.ide.si8051.keil.compiler.category.optimization.emphasis" value="com.silabs.ide.si8051.keil.compiler.category.optimization.emphasis.speed" valueType="enumerated"/>
-								<option id="com.silabs.ide.si8051.keil.compiler.category.includes.paths.1504972398" superClass="com.silabs.ide.si8051.keil.compiler.category.includes.paths" valueType="includePath">
+								<option id="com.silabs.ide.si8051.keil.compiler.category.optimization.emphasis.1502787763" name="Emphasis" superClass="com.silabs.ide.si8051.keil.compiler.category.optimization.emphasis" value="com.silabs.ide.si8051.keil.compiler.category.optimization.emphasis.speed" valueType="enumerated"/>
+								<option id="com.silabs.ide.si8051.keil.compiler.category.includes.paths.1504972398" name="Include paths (INCDIR(...))" superClass="com.silabs.ide.si8051.keil.compiler.category.includes.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${StudioSdkPath}/Device/shared/si8051Base&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${StudioSdkPath}/Device/C8051F380&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${StudioSdkPath}/Device/C8051F380/inc&quot;"/>
 								</option>
-								<option id="com.silabs.ide.si8051.keil.compiler.category.symbols.def.150316408" superClass="com.silabs.ide.si8051.keil.compiler.category.symbols.def" valueType="definedSymbols">
+								<option id="com.silabs.ide.si8051.keil.compiler.category.symbols.def.150316408" name="Defined symbols (DEFINE(...))" superClass="com.silabs.ide.si8051.keil.compiler.category.symbols.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG=1"/>
 								</option>
 								<inputType id="com.silabs.ide.si8051.keil.compiler.inputType.1387991246" superClass="com.silabs.ide.si8051.keil.compiler.inputType"/>
 							</tool>
 							<tool id="com.silabs.ide.si8051.keil.toolchain.assembler.1003406339" name="Keil 8051 Assembler" superClass="com.silabs.ide.si8051.keil.toolchain.assembler">
-								<option id="com.silabs.ide.si8051.keil.assembler.category.symbols.def.982517322" superClass="com.silabs.ide.si8051.keil.assembler.category.symbols.def" valueType="stringList">
+								<option id="com.silabs.ide.si8051.keil.assembler.category.symbols.def.982517322" name="Defined symbols (SET(...))" superClass="com.silabs.ide.si8051.keil.assembler.category.symbols.def" valueType="stringList">
 									<listOptionValue builtIn="false" value=""/>
 								</option>
-								<option id="com.silabs.ide.si8051.keil.assembler.category.includes.paths.682078335" superClass="com.silabs.ide.si8051.keil.assembler.category.includes.paths" valueType="includePath">
+								<option id="com.silabs.ide.si8051.keil.assembler.category.includes.paths.682078335" name="Include paths (INCDIR(...))" superClass="com.silabs.ide.si8051.keil.assembler.category.includes.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${StudioSdkPath}/Device/shared/si8051Base&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${StudioSdkPath}/Device/C8051F380&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${StudioSdkPath}/Device/C8051F380/inc&quot;"/>
@@ -83,24 +83,24 @@
 							<targetPlatform binaryParser="com.silabs.ide.si8051.debug.omf.OMF" id="com.silabs.ide.si8051.keil.targetplatform.1893308523" isAbstract="false" superClass="com.silabs.ide.si8051.keil.targetplatform"/>
 							<builder buildPath="${workspace_loc:/usbint1}/Keil 8051 v9.51 - Release" id="com.silabs.ide.si8051.keil.builder.776877756" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Keil Builder" parallelBuildOn="false" superClass="com.silabs.ide.si8051.keil.builder"/>
 							<tool id="com.silabs.ide.si8051.keil.toolchain.compiler.332949173" name="Keil 8051 Compiler" superClass="com.silabs.ide.si8051.keil.toolchain.compiler">
-								<option id="com.silabs.ide.si8051.keil.compiler.category.optimization.level.520860789" superClass="com.silabs.ide.si8051.keil.compiler.category.optimization.level" value="com.silabs.ide.si8051.keil.compiler.category.optimization.level.9" valueType="enumerated"/>
-								<option id="com.silabs.ide.si8051.keil.compiler.category.optimization.emphasis.383809817" superClass="com.silabs.ide.si8051.keil.compiler.category.optimization.emphasis" value="com.silabs.ide.si8051.keil.compiler.category.optimization.emphasis.speed" valueType="enumerated"/>
-								<option id="com.silabs.ide.si8051.keil.compiler.category.optimization.coloring.114865829" superClass="com.silabs.ide.si8051.keil.compiler.category.optimization.coloring" value="true" valueType="boolean"/>
-								<option id="com.silabs.ide.si8051.keil.compiler.category.includes.paths.1757700955" superClass="com.silabs.ide.si8051.keil.compiler.category.includes.paths" valueType="includePath">
+								<option id="com.silabs.ide.si8051.keil.compiler.category.optimization.level.520860789" name="Level" superClass="com.silabs.ide.si8051.keil.compiler.category.optimization.level" value="com.silabs.ide.si8051.keil.compiler.category.optimization.level.9" valueType="enumerated"/>
+								<option id="com.silabs.ide.si8051.keil.compiler.category.optimization.emphasis.383809817" name="Emphasis" superClass="com.silabs.ide.si8051.keil.compiler.category.optimization.emphasis" value="com.silabs.ide.si8051.keil.compiler.category.optimization.emphasis.speed" valueType="enumerated"/>
+								<option id="com.silabs.ide.si8051.keil.compiler.category.optimization.coloring.114865829" name="Global register coloring" superClass="com.silabs.ide.si8051.keil.compiler.category.optimization.coloring" value="true" valueType="boolean"/>
+								<option id="com.silabs.ide.si8051.keil.compiler.category.includes.paths.1757700955" name="Include paths (INCDIR(...))" superClass="com.silabs.ide.si8051.keil.compiler.category.includes.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${StudioSdkPath}/Device/shared/si8051Base&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${StudioSdkPath}/Device/C8051F380&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${StudioSdkPath}/Device/C8051F380/inc&quot;"/>
 								</option>
-								<option id="com.silabs.ide.si8051.keil.compiler.category.symbols.def.1740102129" superClass="com.silabs.ide.si8051.keil.compiler.category.symbols.def" valueType="definedSymbols">
+								<option id="com.silabs.ide.si8051.keil.compiler.category.symbols.def.1740102129" name="Defined symbols (DEFINE(...))" superClass="com.silabs.ide.si8051.keil.compiler.category.symbols.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="NDEBUG=1"/>
 								</option>
 								<inputType id="com.silabs.ide.si8051.keil.compiler.inputType.1049632063" superClass="com.silabs.ide.si8051.keil.compiler.inputType"/>
 							</tool>
 							<tool id="com.silabs.ide.si8051.keil.toolchain.assembler.502746044" name="Keil 8051 Assembler" superClass="com.silabs.ide.si8051.keil.toolchain.assembler">
-								<option id="com.silabs.ide.si8051.keil.assembler.category.symbols.def.347822836" superClass="com.silabs.ide.si8051.keil.assembler.category.symbols.def" valueType="stringList">
+								<option id="com.silabs.ide.si8051.keil.assembler.category.symbols.def.347822836" name="Defined symbols (SET(...))" superClass="com.silabs.ide.si8051.keil.assembler.category.symbols.def" valueType="stringList">
 									<listOptionValue builtIn="false" value=""/>
 								</option>
-								<option id="com.silabs.ide.si8051.keil.assembler.category.includes.paths.1528827509" superClass="com.silabs.ide.si8051.keil.assembler.category.includes.paths" valueType="includePath">
+								<option id="com.silabs.ide.si8051.keil.assembler.category.includes.paths.1528827509" name="Include paths (INCDIR(...))" superClass="com.silabs.ide.si8051.keil.assembler.category.includes.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${StudioSdkPath}/Device/shared/si8051Base&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${StudioSdkPath}/Device/C8051F380&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${StudioSdkPath}/Device/C8051F380/inc&quot;"/>
@@ -122,7 +122,7 @@
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 		</cconfiguration>
 	</storageModule>
-	<storageModule moduleId="com.silabs.ide.project.core" projectCommon.buildArtifactType="EXE" projectCommon.kitId="com.silabs.kit.si8051.c8051f380dk" projectCommon.partId="com.silabs.mcu.si8051.c8051f380_g.c8051f380" projectCommon.sdkId="com.silabs.sdk.si8051.sls:2.0.0"/>
+	<storageModule moduleId="com.silabs.ide.project.core" project.generation="1" projectCommon.buildArtifactType="EXE" projectCommon.kitId="com.silabs.kit.si8051.c8051f380dk" projectCommon.partId="com.silabs.mcu.si8051.c8051f380_g.c8051f380" projectCommon.sdkId="com.silabs.sdk.si8051.sls:2.0.0"/>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="usbint1.com.silabs.ide.project.core.cdt.cdtMbsProjectType.157265281" name="SLS CDT Project" projectType="com.silabs.ide.project.core.cdt.cdtMbsProjectType"/>
 	</storageModule>
@@ -136,4 +136,5 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.silabs.ide.si8051.keil.KeilScannerInfoCollector"/>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="refreshScope"/>
 </cproject>

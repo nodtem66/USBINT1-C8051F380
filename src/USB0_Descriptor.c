@@ -53,7 +53,7 @@ SEGMENT_VARIABLE(DEVICE_DESC, const Device_Descriptor, SEG_CODE) =
    EP0_PACKET_SIZE,     // bMaxPacketSize0
    LE_ARRAY(0x10C4),    // idVendor
    LE_ARRAY(0x8846),    // idProduct
-   LE_ARRAY(0x0000),    // bcdDevice
+   LE_ARRAY(0x0010),    // bcdDevice (v0.1.0)
    0x01,                // iManufacturer
    0x02,                // iProduct
    0x00,                // iSerialNumber
@@ -68,7 +68,7 @@ SEGMENT_VARIABLE(CONFIG_DESC, const Configuration_Descriptor, SEG_CODE) =
    0x01,                // bConfigurationValue
    0x00,                // iConfiguration
    0x80,                // bmAttributes (Bus-powered)
-   0x14                 // bMaxPower (40mA)
+   0xFA                 // bMaxPower (500mA)
 };
 SEGMENT_VARIABLE(INTERFACE_INTERRUPT_DESC, const Interface_Descriptor, SEG_CODE) =
 {
@@ -121,18 +121,20 @@ SEGMENT_VARIABLE(STRING0_DESC[STRING0_LEN], const U8, SEG_CODE) =
 // Note: sizeof("") returns an additional +1 for the null-terminator,
 // which in this case is used in place of the first two bytes
 // in the string descriptor
-#define STRING1_LEN sizeof ("Silicon Laboratories Inc.") * 2
+#define STRING1_LEN sizeof ("CardioArt Laboratory") * 2
 
 SEGMENT_VARIABLE(STRING1_DESC[STRING1_LEN], const U8, SEG_CODE) =
 {
    STRING1_LEN, 0x03,
-   'S', 0,
+   'C', 0,
+   'a', 0,
+   'r', 0,
+   'd', 0,
    'i', 0,
-   'l', 0,
-   'i', 0,
-   'c', 0,
    'o', 0,
-   'n', 0,
+   'A', 0,
+   'r', 0,
+   't', 0,
    ' ', 0,
    'L', 0,
    'a', 0,
@@ -143,45 +145,41 @@ SEGMENT_VARIABLE(STRING1_DESC[STRING1_LEN], const U8, SEG_CODE) =
    't', 0,
    'o', 0,
    'r', 0,
-   'i', 0,
-   'e', 0,
-   's', 0,
-   ' ', 0,
-   'I', 0,
-   'n', 0,
-   'c', 0,
-   '.', 0
+   'y', 0
 };
 
 // Note: sizeof("") returns an additional +1 for the null-terminator,
 // which in this case is used in place of the first two bytes
 // in the string descriptor
-#define STRING2_LEN sizeof("Fake Streaming 64byte") * 2
+#define STRING2_LEN sizeof("CardioArt Pulse oximeter") * 2
 
 SEGMENT_VARIABLE(STRING2_DESC[STRING2_LEN], const U8, SEG_CODE) =
 {
    STRING2_LEN, 0x03,
-   'F', 0,
+   'C', 0,
    'a', 0,
-   'k', 0,
-   'e', 0,
-   ' ', 0,
-   'S', 0,
-   't', 0,
    'r', 0,
-   'e', 0,
-   'a', 0,
-   'm', 0,
+   'd', 0,
    'i', 0,
-   'n', 0,
-   'g', 0,
-   ' ', 0,
-   '6', 0,
-   '4', 0,
-   'b', 0,
-   'y', 0,
+   'o', 0,
+   'A', 0,
+   'r', 0,
    't', 0,
-   'e', 0
+   ' ', 0,
+   'P', 0,
+   'u', 0,
+   'l', 0,
+   's', 0,
+   'e', 0,
+   ' ', 0,
+   'o', 0,
+   'x', 0,
+   'i', 0,
+   'm', 0,
+   'e', 0,
+   't', 0,
+   'e', 0,
+   'r', 0
 };
 
 SEGMENT_VARIABLE_SEGMENT_POINTER(STRING_DESC_TABLE[], U8, const SEG_CODE, const SEG_CODE) =
