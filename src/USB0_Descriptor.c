@@ -151,7 +151,7 @@ SEGMENT_VARIABLE(STRING1_DESC[STRING1_LEN], const U8, SEG_CODE) =
 // Note: sizeof("") returns an additional +1 for the null-terminator,
 // which in this case is used in place of the first two bytes
 // in the string descriptor
-#define STRING2_LEN sizeof("CardioArt Pulse oximeter") * 2
+#define STRING2_LEN sizeof("CardioArt ECG monitor") * 2
 
 SEGMENT_VARIABLE(STRING2_DESC[STRING2_LEN], const U8, SEG_CODE) =
 {
@@ -166,19 +166,16 @@ SEGMENT_VARIABLE(STRING2_DESC[STRING2_LEN], const U8, SEG_CODE) =
    'r', 0,
    't', 0,
    ' ', 0,
-   'P', 0,
-   'u', 0,
-   'l', 0,
-   's', 0,
-   'e', 0,
+   'E', 0,
+   'C', 0,
+   'G', 0,
    ' ', 0,
-   'o', 0,
-   'x', 0,
-   'i', 0,
    'm', 0,
-   'e', 0,
+   'o', 0,
+   'n', 0,
+   'i', 0,
    't', 0,
-   'e', 0,
+   'o', 0,
    'r', 0
 };
 

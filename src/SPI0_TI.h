@@ -108,6 +108,229 @@
 void AFE4490Write(U8, U32);
 U32 AFE4490Read(U8);
 void AFE4490Init(void);
+
+//=============================================================================
+// definitions for ADS1298
+// from ADS1298 datasheet
+//=============================================================================
+
+// Commands
+#define ADS_CMD_WAKEUP  0x02
+#define ADS_CMD_STANDBY 0x04
+#define ADS_CMD_START   0x08 // start data conversion
+#define ADS_CMD_STOP    0x0a // stop data conversion
+#define ADS_CMD_RDATAC  0x10 // Start read data continuous
+#define ADS_CMD_SDATAC  0x11 // Stop read data continuous
+#define ADS_CMD_RDATA   0x12 // read data
+#define ADS_CMD_RREG    0x20 // read register
+#define ADS_CMD_RREG    0x40 // write register
+
+// register address
+#define ADS_ID      0x00 // ID of ADS version
+#define ADS_CONFIG1 0x01
+#define ADS_CONFIG2 0x02
+#define ADS_CONFIG3 0x03
+#define ADS_LOFF    0x04 // Lead off
+#define ADS_CH1SET  0x05
+#define ADS_CH2SET  0x06
+#define ADS_CH3SET  0x07
+#define ADS_CH4SET  0x08
+#define ADS_CH5SET  0x09
+#define ADS_CH6SET  0x0A
+#define ADS_CH7SET  0x0B
+#define ADS_CH8SET  0x0C
+#define ADS_RLD_SENSP  0x0D // Right leg driven
+#define ADS_RLD_SENSN  0x0E // Right leg driven
+#define ADS_LOFF_SENSP 0x0F // Lead off
+#define ADS_LOFF_SENSN 0x10 // Lead off
+#define ADS_LOFF_FLIP  0x11 // Lead off
+#define ADS_LOFF_STATP 0x12 // Lead off status
+#define ADS_LOFF_STATN 0x13 // Lead off status
+#define ADS_GPIO    0x14 // general purpose input/output
+#define ADS_PACE    0x15 // PACE detection
+#define ADS_RESP    0x16 // respiratory
+#define ADS_CONFIG4 0x17
+#define ADS_WCT1    0x18 // Wilson central terminal
+#define ADS_WCT2    0x19 // Wilson central terminal
+
+// CONFIG1: Configuration Register 1
+#define ADS_CONFIG1__HR       0x80
+#define ADS_CONFIG1__DAISY_EN 0x40
+#define ADS_CONFIG1__CLK_EN   0x20
+#define ADS_CONFIG1__DR2      0x04
+#define ADS_CONFIG1__DR1      0x02
+#define ADS_CONFIG1__DR0      0x01
+#define ADS_CONFIG1__HIGH_RES_32K_SPS 0x80
+#define ADS_CONFIG1__HIGH_RES_16K_SPS 0x81
+#define ADS_CONFIG1__HIGH_RES_8K_SPS  0x82
+#define ADS_CONFIG1__HIGH_RES_4K_SPS  0x83
+#define ADS_CONFIG1__HIGH_RES_2K_SPS  0x84
+#define ADS_CONFIG1__HIGH_RES_1K_SPS  0x85
+#define ADS_CONFIG1__HIGH_RES_500_SPS 0x86
+#define ADS_CONFIG1__LOW_POWR_250_SPS 0x03
+
+// CONFIG2: Configuration Register 2
+#define ADS_CONFIG2__WCT_CHOP     0x20
+#define ADS_CONFIG2__INT_TEST     0x10
+#define ADS_CONFIG2__TEST_AMP     0x04
+#define ADS_CONFIG2__TEST_FREQ1   0x02
+#define ADS_CONFIG2__TEST_FREQ0   0x01
+#define ADS_CONFIG2__INT_TEST_4HZ 0x10
+#define ADS_CONFIG2__INT_TEST_8HZ 0x11
+#define ADS_CONFIG2__INT_TEST_DC  0x13
+
+// CONFIG3: Configuration Register 3
+#define ADS_CONFIG3__PD_REFBUF     0x80
+#define ADS_CONFIG3__VREF_4V       0x20
+#define ADS_CONFIG3__RLD_MEAS      0x10
+#define ADS_CONFIG3__RLDREF_INT    0x08
+#define ADS_CONFIG3__PD_RLD        0x04
+#define ADS_CONFIG3__RLD_LOFF_SENS 0x02
+#define ADS_CONFIG3__RLD_STAT      0x01
+
+//LOFF: Lead-Off Control Register
+#define ADS_LOFF__COMP_TH2         0x80
+#define ADS_LOFF__COMP_TH1         0x40
+#define ADS_LOFF__COMP_TH0         0x20
+#define ADS_LOFF__VLEAD_OFF_EN     0x10
+#define ADS_LOFF__ILEAD_OFF1       0x08
+#define ADS_LOFF__ILEAD_OFF0       0x04
+#define ADS_LOFF__FLEAD_OFF1       0x02
+#define ADS_LOFF__FLEAD_OFF0       0x01
+#define ADS_LOFF__COMP_TH_95       0x00
+#define ADS_LOFF__COMP_TH_92_5     0x20
+#define ADS_LOFF__COMP_TH_90       0x40
+#define ADS_LOFF__COMP_TH_87_5     0x60
+#define ADS_LOFF__COMP_TH_85       0x80
+#define ADS_LOFF__COMP_TH_80       0xA0
+#define ADS_LOFF__COMP_TH_75       0xC0
+#define ADS_LOFF__COMP_TH_70       0xE0
+#define ADS_LOFF__ILEAD_OFF_6nA    0x00
+#define ADS_LOFF__ILEAD_OFF_12nA   0x04
+#define ADS_LOFF__ILEAD_OFF_18nA   0x08
+#define ADS_LOFF__ILEAD_OFF_24nA   0x0C
+#define ADS_LOFF__FLEAD_OFF_AC     0x01
+#define ADS_LOFF__FLEAD_OFF_DC     0x03
+
+//CHnSET: Individual Channel Settings (n = 1 : 8)
+#define ADS_CHSET__PD              0x80
+#define ADS_CHSET__GAIN2           0x40
+#define ADS_CHSET__GAIN1           0x20
+#define ADS_CHSET__GAIN0           0x10
+#define ADS_CHSET__MUX2            0x04
+#define ADS_CHSET__MUX1            0x02
+#define ADS_CHSET__MUX0            0x01
+#define ADS_CHSET__GAIN_1X         0x10
+#define ADS_CHSET__GAIN_2X         0x20
+#define ADS_CHSET__GAIN_3X         0x30
+#define ADS_CHSET__GAIN_4X         0x40
+#define ADS_CHSET__GAIN_6X         0x00
+#define ADS_CHSET__GAIN_8X         0x50
+#define ADS_CHSET__GAIN_12X        0x60
+#define ADS_CHSET__ELECTRODE_INPUT 0x00
+#define ADS_CHSET__SHORTED         0x01
+#define ADS_CHSET__RLD_INPUT       0x02
+#define ADS_CHSET__MVDD            0x03
+#define ADS_CHSET__TEMP            0x04
+#define ADS_CHSET__TEST_SIGNAL     0x05
+#define ADS_CHSET__RLD_DRP         0x06
+#define ADS_CHSET__RLD_DRN         0x07
+
+//PACE: PACE Detect Register
+#define ADS_PACE__PACEE1            0x10
+#define ADS_PACE__PACEE0            0x08
+#define ADS_PACE__PACEO1            0x04
+#define ADS_PACE__PACEO0            0x02
+#define ADS_PACE__PD_PACE           0x01
+#define ADS_PACE__PACEE_CHAN2       0x00
+#define ADS_PACE__PACEE_CHAN4       0x08
+#define ADS_PACE__PACEE_CHAN6       0x10
+#define ADS_PACE__PACEE_CHAN8       0x18
+#define ADS_PACE__PACEO_CHAN1       0x00
+#define ADS_PACE__PACEO_CHAN3       0x02
+#define ADS_PACE__PACEO_CHAN5       0x04
+#define ADS_PACE__PACEO_CHAN7       0x06
+
+//RESP: Respiration Control Register
+#define ADS_RESP__RESP_DEMOD_EN1    0x80
+#define ADS_RESP__RESP_MOD_EN1      0x40
+#define ADS_RESP__RESP_PH2          0x10
+#define ADS_RESP__RESP_PH1          0x08
+#define ADS_RESP__RESP_PH0          0x04
+#define ADS_RESP__RESP_CTRL1        0x02
+#define ADS_RESP__RESP_CTRL0        0x01
+#define ADS_RESP__RESP_PH_22_5      0x00
+#define ADS_RESP__RESP_PH_45        0x04
+#define ADS_RESP__RESP_PH_67_5      0x08
+#define ADS_RESP__RESP_PH_90        0x0C
+#define ADS_RESP__RESP_PH_112_5     0x10
+#define ADS_RESP__RESP_PH_135       0x14
+#define ADS_RESP__RESP_PH_157_5     0x18
+#define ADS_RESP__RESP_NONE         0x00
+#define ADS_RESP__RESP_EXT          0x01
+#define ADS_RESP__RESP_INT_SIG_INT  0x02
+#define ADS_RESP__RESP_INT_SIG_EXT  0x03
+
+//CONFIG4: Configuration Register 4
+#define ADS_CONFIG4__RESP_FREQ2     0x80
+#define ADS_CONFIG4__RESP_FREQ1     0x40
+#define ADS_CONFIG4__RESP_FREQ0     0x20
+#define ADS_CONFIG4__SINGLE_SHOT    0x08
+#define ADS_CONFIG4__WCT_TO_RLD     0x04
+#define ADS_CONFIG4__PD_LOFF_COMP   0x02
+#define ADS_CONFIG4__RESP_FREQ_64k_Hz     0x00
+#define ADS_CONFIG4__RESP_FREQ_32k_Hz     0x20
+#define ADS_CONFIG4__RESP_FREQ_16k_Hz     0x40
+#define ADS_CONFIG4__RESP_FREQ_8k_Hz      0x60
+#define ADS_CONFIG4__RESP_FREQ_4k_Hz      0x80
+#define ADS_CONFIG4__RESP_FREQ_2k_Hz      0xA0
+#define ADS_CONFIG4__RESP_FREQ_1k_Hz      0xC0
+#define ADS_CONFIG4__RESP_FREQ_500_Hz     0xE0
+
+//WCT1: Wilson Central Terminal and Augmented Lead Control Register
+#define ADS_WCT1__aVF_CH6           0x80
+#define ADS_WCT1__aVL_CH5           0x40
+#define ADS_WCT1__aVR_CH7           0x20
+#define ADS_WCT1__avR_CH4           0x10
+#define ADS_WCT1__PD_WCTA           0x08
+#define ADS_WCT1__WCTA2             0x04
+#define ADS_WCT1__WCTA1             0x02
+#define ADS_WCT1__WCTA0             0x01
+#define ADS_WCT1__WCTA_CH1P         0x00
+#define ADS_WCT1__WCTA_CH1N         0x01
+#define ADS_WCT1__WCTA_CH2P         0x02
+#define ADS_WCT1__WCTA_CH2N         0x03
+#define ADS_WCT1__WCTA_CH3P         0x04
+#define ADS_WCT1__WCTA_CH3N         0x05
+#define ADS_WCT1__WCTA_CH4P         0x06
+#define ADS_WCT1__WCTA_CH4N         0x07
+
+//WCT2: Wilson Central Terminal Control Register
+#define ADS_WCT2__PD_WCTC           0x80
+#define ADS_WCT2__PD_WCTB           0x40
+#define ADS_WCT2__WCTB2             0x20
+#define ADS_WCT2__WCTB1             0x10
+#define ADS_WCT2__WCTB0             0x08
+#define ADS_WCT2__WCTC2             0x04
+#define ADS_WCT2__WCTC1             0x02
+#define ADS_WCT2__WCTC0             0x01
+#define ADS_WCT2__WCTB_CH1P         0x00
+#define ADS_WCT2__WCTB_CH1N         0x08
+#define ADS_WCT2__WCTB_CH2P         0x10
+#define ADS_WCT2__WCTB_CH2N         0x18
+#define ADS_WCT2__WCTB_CH3P         0x20
+#define ADS_WCT2__WCTB_CH3N         0x28
+#define ADS_WCT2__WCTB_CH4P         0x30
+#define ADS_WCT2__WCTB_CH4N         0x38
+
+#define ADS_WCT2__WCTC_CH1P         0x00
+#define ADS_WCT2__WCTC_CH1N         0x01
+#define ADS_WCT2__WCTC_CH2P         0x02
+#define ADS_WCT2__WCTC_CH2N         0x03
+#define ADS_WCT2__WCTC_CH3P         0x04
+#define ADS_WCT2__WCTC_CH3N         0x05
+#define ADS_WCT2__WCTC_CH4P         0x06
+#define ADS_WCT2__WCTC_CH4N         0x07
 //=============================================================================
 // SPI Helper
 //=============================================================================
