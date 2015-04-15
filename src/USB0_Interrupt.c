@@ -536,7 +536,6 @@ INTERRUPT (SPI0_ISR, SPI0_IRQn)
       {
          SPI0CN_NSSMD0 = 1; //active NSS (deselect device)
          readySPI &= ~READY_SPI_END; // reset flag
-         In_Packet[3]++;
       }
    }
 }

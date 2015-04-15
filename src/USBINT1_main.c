@@ -54,14 +54,14 @@
 
 // IN_PACKET and OUT_PACKET buffer bytes immediately before and
 // after they are transferred across USB inside the report handlers
-
 SEGMENT_VARIABLE(In_Packet[IN_EP1_PACKET_SIZE], U8, SEG_XDATA);
 SEGMENT_VARIABLE(Out_Packet[OUT_EP1_PACKET_SIZE], U8, SEG_XDATA);
 SEGMENT_VARIABLE(In3_Packet[IN_EP3_PACKET_SIZE], U8, SEG_XDATA);
 
-// flowFlag and flowFlagC check for debug flow
-U8 flowFlag = 0x00;
-U8 flowFlagC = 0xFF;
+// atomic lock
+volatile bit InPacketLock = 0;
+volatile bit OutPacketLock = 0;
+volatile bit In3PacketLock = 0;
 
 //-----------------------------------------------------------------------------
 // Main Routine
@@ -90,7 +90,6 @@ void main(void)
 
    //Init AFE4490 Board
    AFE4490Init();
-   In_Packet[7]++;
 
    while (1)
    {
@@ -100,20 +99,26 @@ void main(void)
             //SPI_FLUSH();
             buffer = AFE4490Read(LED2ABSVAL); // read LED2 val
             // store 22bit in Big-endian (MSB in Lowest address)
+            LOCK(In3PacketLock)
             In3_Packet[0] = (buffer & 0x3F0000);
             In3_Packet[1] = (buffer & 0x00FF00);
             In3_Packet[2] = (buffer & 0x0000FF);
+            UNLOCK(In3PacketLock)
 
             buffer = AFE4490Read(LED1ABSVAL); // read LED1 val
+            LOCK(In3PacketLock)
             In3_Packet[3] = (buffer & 0x3F0000);
             In3_Packet[4] = (buffer & 0x00FF00);
             In3_Packet[5] = (buffer & 0x0000FF);
+            UNLOCK(In3PacketLock)
 
-            buffer = AFE4490Read(ALED2VAL); // read ambient LED2 val
-            buffer += AFE4490Read(ALED1VAL); // read ambient LED1 val
+            buffer = AFE4490Read(ALED2VAL)/2; // read ambient LED2 val
+            buffer += AFE4490Read(ALED1VAL)/2; // read ambient LED1 val
+            LOCK(InPacketLock)
             In_Packet[4] = (buffer & 0x3F0000);
             In_Packet[5] = (buffer & 0x00FF00);
             In_Packet[6] = (buffer & 0x0000FF);
+            UNLOCK(InPacketLock)
             countADC_RDY = 0;
          }
       }

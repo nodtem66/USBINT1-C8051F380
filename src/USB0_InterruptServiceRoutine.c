@@ -360,7 +360,9 @@ void Handle_In1 ()
       }
 
       // Put new data on Fifo
+      LOCK(InPacketLock)
       Fifo_Write_InterruptServiceRoutine(FIFO_EP1, IN_EP1_PACKET_SIZE, In_Packet);
+      UNLOCK(InPacketLock)
       
       // Set In Packet ready bit, indicating 
       POLL_WRITE_BYTE(EINCSR1, rbInINPRDY);
@@ -562,9 +564,10 @@ static void Send_Packet_ISR()
       if ( !(controlReg & rbINPRDY) )
       {
          // Put new data to FIFO
-         In3_Packet[1]++;
+         //In3_Packet[1]++;
+         LOCK(In3PacketLock)
          Fifo_Write_InterruptServiceRoutine(FIFO_EP3, IN_EP3_PACKET_SIZE, In3_Packet);
-
+         UNLOCK(In3PacketLock)
          // Set In Packet ready bit, indicating a packet is ready
          // to send to the host
          POLL_WRITE_BYTE(EINCSRL, rbInINPRDY);
