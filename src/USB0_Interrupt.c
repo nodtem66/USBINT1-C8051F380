@@ -303,8 +303,8 @@ void Sysclk_Init(void)
 // P2.0  -  Skipped,     Open-Drain, Digital
 // P2.1  -  Skipped,     Open-Drain, Digital
 // P2.2  -  SCK  (SPI0), Push-Pull,  Digital -- SCLK
-// P2.3  -  MISO (SPI0), Push-Pull,  Digital -- SPIIN
-// P2.4  -  MOSI (SPI0), Open-Drain, Digital -- SPIOUT
+// P2.3  -  MISO (SPI0), Open-Drain, Digital -- SPIOUT
+// P2.4  -  MOSI (SPI0), Push-Pull,  Digital -- SPIIN
 // P2.5  -  NSS  (SPI0), Push-Pull,  Digital -- SPICS
 // P2.6  -  CEX0  (PCA), Open-Drain, Digital -- DRDY
 // P2.7  -  Skipped,     Open-Drain, Digital
@@ -320,12 +320,12 @@ void Sysclk_Init(void)
 //-----------------------------------------------------------------------------
 void Port_Init(void)
 {
-   P0MDOUT = 0xFB; // 1111 1011 P0.7-P0.0
-   P2MDOUT = 0x2C; // for Push-Pull
+   //P0MDOUT = 0xFB; // 1111 1011 P0.7-P0.0
+   P2MDOUT = 0x34; // for Push-Pull 0011 0100
 
    P0SKIP = 0xFF; // Skip all Port0 pin
    P1SKIP = 0xFF; // Skip all Port1 pin
-   P2SKIP = 0x83; // Skip P2.4 P2.7
+   P2SKIP = 0x83; // Skip 1000 0011
    XBR0 = XBR0_SPI0E__ENABLED;        // Enable SPI0
    XBR1 = XBR1_XBARE__ENABLED | 0x01; // Enable the crossbar and PCA0 (CEX0)
    //XBR2 = XBR2_URT1E__ENABLED;        // Enable UART1
@@ -530,6 +530,7 @@ INTERRUPT (SPI0_ISR, SPI0_IRQn)
       if (readySPI & READY_SPI_END)
       {
          readySPI &= ~READY_SPI_END; // reset flag
+         TMR2CN_TR2 = 1; // delay before deselect device
       }
    }
 }

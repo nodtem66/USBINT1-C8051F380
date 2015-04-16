@@ -88,11 +88,12 @@ void main(void)
    IE_EA = 1;
 
    //Init AFE4490 Board
-   //ADSInit();
-   //In_Packet[4] = ADSRead(ADS_ID);
+   ADSInit();
 
    while (1)
    {
-
+      //ADSWrite(ADS_CONFIG1, ADS_CONFIG1__HIGH_RES_1K_SPS);
+      In_Packet[4] = ADSRead(ADS_ID);
+      Delay();
    }
 }

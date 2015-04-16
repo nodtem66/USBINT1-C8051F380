@@ -135,14 +135,14 @@ void ADSCommand(U8 cmd)
 
 // ADSWrite(address, value)
 // write one byte to register
-void ADSWrite(U8 address, U8 value)
+void ADSWrite(U8 Address, U8 Data)
 {
    // Wait until the SPI is free
    while(!SPI0CN_NSSMD0);
    SPI_START()
-   WRITE_SPI(ADS_CMD_WREG | (address & 0x1F)) // write address
+   WRITE_SPI(ADS_CMD_WREG | (Address & 0x1F)) // write address
    WRITE_SPI(0x00) // write <number of register - 1> to write
-   WRITE_SPI(value & 0xFF) // write value to address
+   WRITE_SPI(Data & 0xFF) // write value to address
    //WRITE_SPI
    SPI_END()
 
@@ -151,13 +151,13 @@ void ADSWrite(U8 address, U8 value)
 
 // ADSRead(address, value)
 // read one byte from register
-U8 ADSRead(U8 address)
+U8 ADSRead(U8 Address)
 {
    U8 buffer = 0;
    // Wait until the SPI is free
    while(!SPI0CN_NSSMD0);
    SPI_START()
-   WRITE_SPI(ADS_CMD_RREG | (address & 0x1F)) // write address
+   WRITE_SPI(ADS_CMD_RREG | (Address & 0x1F)) // write address
    WRITE_SPI(0x00) // write <number of register - 1> to read
    READ_SPI(buffer)
    SPI_END()
