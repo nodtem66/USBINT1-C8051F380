@@ -52,7 +52,7 @@ SEGMENT_VARIABLE(DEVICE_DESC, const Device_Descriptor, SEG_CODE) =
    0x00,                // bDeviceProtocol
    EP0_PACKET_SIZE,     // bMaxPacketSize0
    LE_ARRAY(0x10C4),    // idVendor
-   LE_ARRAY(0x8846),    // idProduct
+   LE_ARRAY(0x8A40),    // idProduct (unique PID for this product)
    LE_ARRAY(0x0010),    // bcdDevice (v0.1.0)
    0x01,                // iManufacturer
    0x02,                // iProduct
@@ -68,7 +68,7 @@ SEGMENT_VARIABLE(CONFIG_DESC, const Configuration_Descriptor, SEG_CODE) =
    0x01,                // bConfigurationValue
    0x00,                // iConfiguration
    0x80,                // bmAttributes (Bus-powered)
-   0xFA                 // bMaxPower (500mA)
+   0x32                 // bMaxPower (100mA)
 };
 SEGMENT_VARIABLE(INTERFACE_INTERRUPT_DESC, const Interface_Descriptor, SEG_CODE) =
 {
@@ -151,21 +151,11 @@ SEGMENT_VARIABLE(STRING1_DESC[STRING1_LEN], const U8, SEG_CODE) =
 // Note: sizeof("") returns an additional +1 for the null-terminator,
 // which in this case is used in place of the first two bytes
 // in the string descriptor
-#define STRING2_LEN sizeof("CardioArt Pulse oximeter") * 2
+#define STRING2_LEN sizeof("Pulse Oximeter") * 2
 
 SEGMENT_VARIABLE(STRING2_DESC[STRING2_LEN], const U8, SEG_CODE) =
 {
    STRING2_LEN, 0x03,
-   'C', 0,
-   'a', 0,
-   'r', 0,
-   'd', 0,
-   'i', 0,
-   'o', 0,
-   'A', 0,
-   'r', 0,
-   't', 0,
-   ' ', 0,
    'P', 0,
    'u', 0,
    'l', 0,
