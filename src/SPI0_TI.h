@@ -136,11 +136,12 @@ extern U8 countADC_RDY;  // count for ADC_RDY triggers
 //    wait for busy transmit holding register and write a byte to SPI
 //-----------------------------------------------------------------------------
 #define WRITE_SPI(b) while(!SPI0CN_TXBMT); SPI0DAT = (b);
-#define READ_SPI(b) while(!SPI0CN_TXBMT); \
-      while((SPI0CFG & SPI0CFG_SPIBSY__SET)); \
-      SPI0DAT = 0; b = SPI0DAT;
+#define READ_SPI(b) while(!SPI0CN_TXBMT); SPI0DAT = 0;\
+      while((SPI0CFG & SPI0CFG_SPIBSY__SET)); b = SPI0DAT;
 #define SPI_START() readySPI &= ~READY_SPI_END; SPI0CN_NSSMD0 = 0;
-#define SPI_END() while(!SPI0CN_TXBMT); readySPI |= READY_SPI_END;
+#define SPI_END() while(!SPI0CN_TXBMT); \
+      while((SPI0CFG & SPI0CFG_SPIBSY__SET)); \
+      SPI0CN_NSSMD0 = 1;//readySPI |= READY_SPI_END;
 /*
 #define SPI_END() while(!SPI0CN_TXBMT); \
    while((SPI0CFG & SPI0CFG_SPIBSY__SET)); \

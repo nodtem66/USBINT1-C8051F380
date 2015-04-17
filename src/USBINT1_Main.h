@@ -49,9 +49,13 @@
 //-----------------------------------------------------------------------------
 // External Global Variables
 //-----------------------------------------------------------------------------
-extern bit InPacketLock;
-extern bit OutPacketLock;
-extern bit In3PacketLock;
+//extern bit InPacketLock;
+//extern bit OutPacketLock;
+//extern bit In3PacketLock;
+extern U32 ValueLED1;
+extern U32 ValueLED2;
+extern U32 ValueALED1;
+extern U32 ValueALED2;
 //-----------------------------------------------------------------------------
 // Function Prototypes
 //-----------------------------------------------------------------------------

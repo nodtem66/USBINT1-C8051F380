@@ -59,9 +59,13 @@ SEGMENT_VARIABLE(Out_Packet[OUT_EP1_PACKET_SIZE], U8, SEG_XDATA);
 SEGMENT_VARIABLE(In3_Packet[IN_EP3_PACKET_SIZE], U8, SEG_XDATA);
 
 // atomic lock
-volatile bit InPacketLock = 0;
-volatile bit OutPacketLock = 0;
-volatile bit In3PacketLock = 0;
+//volatile bit InPacketLock = 0;
+//volatile bit OutPacketLock = 0;
+//volatile bit In3PacketLock = 0;
+U32 ValueLED1;
+U32 ValueLED2;
+U32 ValueALED1;
+U32 ValueALED2;
 
 //-----------------------------------------------------------------------------
 // Main Routine
@@ -69,7 +73,6 @@ volatile bit In3PacketLock = 0;
 void main(void)
 {
    U16 i;
-   U32 buffer;
 
    // Initialize packets to 0
    for (i = 0; i < sizeof (In_Packet); i++)
@@ -95,32 +98,21 @@ void main(void)
    {
       if (readySPI & READY_ADC_RDY) {
          readySPI &= ~READY_ADC_RDY; // clear ADC_RDY flag
-         if (countADC_RDY >= 4) {
+         //if (countADC_RDY >= 4) {
             //SPI_FLUSH();
-            buffer = AFE4490Read(LED2ABSVAL); // read LED2 val
-            // store 22bit in Big-endian (MSB in Lowest address)
-            LOCK(In3PacketLock)
-            In3_Packet[0] = (buffer & 0x3F0000);
-            In3_Packet[1] = (buffer & 0x00FF00);
-            In3_Packet[2] = (buffer & 0x0000FF);
-            UNLOCK(In3PacketLock)
 
-            buffer = AFE4490Read(LED1ABSVAL); // read LED1 val
-            LOCK(In3PacketLock)
-            In3_Packet[3] = (buffer & 0x3F0000);
-            In3_Packet[4] = (buffer & 0x00FF00);
-            In3_Packet[5] = (buffer & 0x0000FF);
-            UNLOCK(In3PacketLock)
+            //LOCK(In3PacketLock)
+            ValueLED2 = AFE4490Read(LED2ABSVAL); // read LED2 val
+            ValueLED1 = AFE4490Read(LED1ABSVAL); // read LED1 val
+            //UNLOCK(In3PacketLock)
 
-            buffer = AFE4490Read(ALED2VAL)/2; // read ambient LED2 val
-            buffer += AFE4490Read(ALED1VAL)/2; // read ambient LED1 val
-            LOCK(InPacketLock)
-            In_Packet[4] = (buffer & 0x3F0000);
-            In_Packet[5] = (buffer & 0x00FF00);
-            In_Packet[6] = (buffer & 0x0000FF);
-            UNLOCK(InPacketLock)
-            countADC_RDY = 0;
-         }
+            //LOCK(InPacketLock)
+            ValueALED2 = AFE4490Read(ALED2VAL); // read ambient LED2 val
+            ValueALED1 = AFE4490Read(ALED1VAL); // read ambient LED1 val
+            //UNLOCK(InPacketLock)
+
+           // countADC_RDY = 0;
+         //}
       }
       if (readyUART1 & READY_READ)
       {

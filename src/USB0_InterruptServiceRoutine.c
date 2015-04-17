@@ -341,6 +341,7 @@ void Handle_Control (void)
 void Handle_In1 ()
 {
    U8 controlReg;
+   U32 Temp;
 
    POLL_WRITE_BYTE(INDEX, 1);           // Set index to endpoint 1 registers
    POLL_READ_BYTE(EINCSR1, controlReg); // Read contol register for EP 1
@@ -359,10 +360,14 @@ void Handle_In1 ()
          POLL_WRITE_BYTE(EINCSR1, rbInCLRDT);
       }
 
+      // Insert Value in Big-endian (MSB in Lowest addr)
+      Temp = ValueALED1 + ValueALED2;
+      In_Packet[4] = (Temp >> 16) & 0xFF;
+      In_Packet[5] = (Temp >> 8) & 0xFF;
+      In_Packet[6] = Temp & 0xFF;
+
       // Put new data on Fifo
-      LOCK(InPacketLock)
       Fifo_Write_InterruptServiceRoutine(FIFO_EP1, IN_EP1_PACKET_SIZE, In_Packet);
-      UNLOCK(InPacketLock)
       
       // Set In Packet ready bit, indicating 
       POLL_WRITE_BYTE(EINCSR1, rbInINPRDY);
@@ -554,7 +559,7 @@ void Force_Stall (void)
 static void Send_Packet_ISR()
 {
    U8 controlReg;
-
+   U32 Temp, Temp2;
    POLL_WRITE_BYTE(INDEX, 3);
    POLL_READ_BYTE(EINCSRL, controlReg);
 
@@ -563,11 +568,21 @@ static void Send_Packet_ISR()
       //If FIFO available
       if ( !(controlReg & rbINPRDY) )
       {
+         // Insert Value in Big-endian (MSB in Lowest addr)
+         //LOCK(In3PacketLock)
+         Temp = ValueLED1;
+         In3_Packet[0] = (Temp >> 16) & 0xFF;
+         In3_Packet[1] = (Temp >> 8) & 0xFF;
+         In3_Packet[2] = Temp & 0xFF;
+         Temp2 = ValueLED2;
+         In3_Packet[3] = (Temp2 >> 16) & 0xFF;
+         In3_Packet[4] = (Temp2 >> 8) & 0xFF;
+         In3_Packet[5] = Temp2 & 0xFF;
+         //UNLOCK(In3PacketLock)
+
          // Put new data to FIFO
-         //In3_Packet[1]++;
-         LOCK(In3PacketLock)
          Fifo_Write_InterruptServiceRoutine(FIFO_EP3, IN_EP3_PACKET_SIZE, In3_Packet);
-         UNLOCK(In3PacketLock)
+
          // Set In Packet ready bit, indicating a packet is ready
          // to send to the host
          POLL_WRITE_BYTE(EINCSRL, rbInINPRDY);
