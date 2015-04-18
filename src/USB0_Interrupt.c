@@ -39,7 +39,6 @@
 #include "USB0_InterruptServiceRoutine.h"
 #include "USB0_Register.h"
 #include "USBINT1_Main.h"
-#include "UART1_ATCommand.h"
 #include "SPI0_TI.h"
 
 #if TARGET_MCU != MCU_F380
@@ -118,7 +117,7 @@ void System_Init(void)
    Sysclk_Init();                     // Initialize oscillator
    Port_Init();                       // Initialize crossbar and GPIO
    Timer2_Init();                     // Initialize Timer2
-   //Timer3_Init();                     // Initialize Timer3
+   Timer3_Init();                     // Initialize Timer3
    //ADC0_Init ();                    // Initialize ADC0
 }
 
@@ -191,7 +190,7 @@ void SPI0_Init(void)
 
    // set 4-wire single master; NSS signal is an active-low output
    SPI0CN |= SPI0CN_NSSMD__4_WIRE_MASTER_NSS_LOW;
-   SPI0CFG = SPI0CFG_CKPHA__DATA_CENTERED_FIRST | SPI0CFG_CKPOL__IDLE_LOW
+   SPI0CFG = SPI0CFG_CKPHA__DATA_CENTERED_SECOND | SPI0CFG_CKPOL__IDLE_LOW
          | SPI0CFG_MSTEN__MASTER_ENABLED;
    SPI0CKR = SYSCLK / (2 * 500000) - 1;
    SPI0CN_SPIEN = SPI0CN_SPIEN__ENABLED;
@@ -321,7 +320,7 @@ void Sysclk_Init(void)
 void Port_Init(void)
 {
    //P0MDOUT = 0xFB; // 1111 1011 P0.7-P0.0
-   P2MDOUT = 0x34; // for Push-Pull 0011 0100
+   P2MDOUT = 0x34; // for Push-Pull 0011 0100 (0x34)
 
    P0SKIP = 0xFF; // Skip all Port0 pin
    P1SKIP = 0xFF; // Skip all Port1 pin
@@ -360,17 +359,17 @@ void Timer2_Init(void)
 // Return Value : None
 // Parameters   : None
 //
-// Timer 3 reload, used to check if timeout for UART1 9600
-// Timeout 10 msec (100Hz)
+// Timer 3 reload, used to delay
+// Timeout 0.03125 second (32Hz)
 //
-// Full-speed (SYSCLK: 24 MHz) reload rate: 100 Hz
+// Full-speed (SYSCLK: 24 MHz) reload rate: 32 Hz
 //
 //-----------------------------------------------------------------------------
 void Timer3_Init(void)
 {
    TMR3CN = 0x00;            // Stop Timer3; Clear TF3;
-   TMR3RL = 0x10000 - 20000; // Timer3 clocked based on TMR3CN_T2XCLK (SYSCLK/12)
-   TMR3 = TMR3RL;            // set to reload imediately
+   TMR3RL = 0x10000 - 62500; // Timer3 clocked based on TMR3CN_T2XCLK (SYSCLK/12)
+   TMR3 = TMR3RL;            // set to reload immediately
    EIE1 |= EIE1_ET3__ENABLED;// enable Timer3 interrupts
    TMR3CN = TMR3CN_TR3__RUN; // start Timer3
 }
@@ -403,8 +402,8 @@ void PCA0_Init(void)
    PCA0CN = 0; // reset and stop PCA0 counter/timer
    EIE1 |= EIE1_EPCA0__ENABLED;       // enable pca0 interrupts
    PCA0MD = PCA0MD_ECF__OVF_INT_DISABLED // disable overwrite counter/timer interrupt
-            | PCA0MD_CPS__SYSCLK; // use SYSCLK/4 to PCA0 based clock
-   PCA0CPM0 = PCA0CPM0_CAPP__ENABLED  // enable Capture positive function
+            | PCA0MD_CPS__SYSCLK; // use SYSCLK to PCA0 based clock
+   PCA0CPM0 = PCA0CPM0_CAPN__ENABLED  // enable Capture at falling edge
             | PCA0CPM0_ECCF__ENABLED; // enable capture/compare flag interrupt
    PCA0CN = PCA0CN_CR__RUN;           // run PCA counter/timer
 }
@@ -427,11 +426,6 @@ INTERRUPT (Timer2_ISR, TIMER2_IRQn)
    In_Packet[3]++;
    SPI0CN_NSSMD0 = 1; //active NSS (deselect device)
 }
-
-//-----------------------------------------------------------------------------
-// Interrupt Service Routines
-//-----------------------------------------------------------------------------
-
 //-----------------------------------------------------------------------------
 // Timer2_ISR
 //-----------------------------------------------------------------------------
@@ -441,10 +435,15 @@ INTERRUPT (Timer2_ISR, TIMER2_IRQn)
 //-----------------------------------------------------------------------------
 INTERRUPT (Timer3_ISR, TIMER3_IRQn)
 {
-   TMR3CN &= ~TMR3CN_TF3H__BMASK; // clear pending interrupts
-   //begin_state_machine();
+   TMR3CN &= ~TMR3CN_TF3H__SET;   // reset pending flag
+   //TODO: use #3 to debug
+   In_Packet[7]++;
+   countDelay--;
+   if (countDelay <= 0)
+   {
+      TMR3CN &= ~TMR3CN_TR3__RUN; // stop timer
+   }
 }
-
 //-----------------------------------------------------------------------------
 // ADC0_ConvComplete_ISR
 //-----------------------------------------------------------------------------
@@ -473,41 +472,6 @@ INTERRUPT (ADC0_ConvComplete_ISR, ADC0EOC_IRQn)
 }
 
 //-----------------------------------------------------------------------------
-// UART1_ISR
-//-----------------------------------------------------------------------------
-//
-// called when TX/RX signal on UART1
-//
-//-----------------------------------------------------------------------------
-INTERRUPT(UART1_ISR, UART1_IRQn)
-{
-   if (SCON1 & SCON1_TI__SET)
-   {
-      P0_B3 ^= 1; // Toggle P0.3 bit
-      SCON1 &= ~SCON1_TI__SET; // clear tx flag
-      send_next_char_isr();
-   }
-   if (SCON1 & SCON1_RI__SET)
-   {
-      if (SCON1 & SCON1_OVR__SET) // if RX FIFO full
-      {
-         SCON1 &= ~SCON1_OVR__SET; // clear RX FIFO overrun flag
-         //send_error(ERROR_FULL_FIFO); //send error to client
-      }
-      if (SCON1 & SCON1_PERR__SET) // if invalid parity bit
-      {
-         SCON1 &= ~SCON1_PERR__SET; // clear flag
-         //send_error(ERROR_PARITY); //send error to client
-      }
-
-      read_char_isr();
-      while (SCON1 & SCON1_RI__SET) // if FIFO is not empty, rx will not clear
-      {
-         read_char_isr();
-      }
-   }
-}
-//-----------------------------------------------------------------------------
 // SPI0_ISR
 //-----------------------------------------------------------------------------
 //
@@ -526,6 +490,12 @@ INTERRUPT (SPI0_ISR, SPI0_IRQn)
    {
       SPI0CN_SPIF = 0;
       SPI0CN_MODF = 0;
+      // if read spi is running
+      if (readySPI & READY_SPI_READ)
+      {
+         bufferSPI = SPI0DAT;
+         readySPI &= ~READY_SPI_READ;
+      }
       // if last byte to transfer
       if (readySPI & READY_SPI_END)
       {
@@ -547,7 +517,7 @@ INTERRUPT (PCA0_ISR, PCA0_IRQn)
    {
       PCA0CN_CCF0 = 0;
       In_Packet[0]++;
-      countADC_RDY++;
+      //countADC_RDY++;
       readySPI |= (READY_ADC_RDY);
    } else {
       PCA0CN_CF &= ~0x8e;
@@ -561,7 +531,7 @@ INTERRUPT (PCA0_ISR, PCA0_IRQn)
 //-----------------------------------------------------------------------------
 // Delay
 //-----------------------------------------------------------------------------
-// Used for a small pause, approximately 80 us in Full Speed,
+// Used for a small pause, approximately 0.24 ms in Full Speed,
 // and 1 ms when clock is configured for Low Speed
 //
 //-----------------------------------------------------------------------------
@@ -571,4 +541,14 @@ void Delay(void)
    for (x = 0; x < 500; x)
       x++;
 }
-
+//-----------------------------------------------------------------------------
+// DelayForADS
+//-----------------------------------------------------------------------------
+// used to delay SPI NSS hold active more than 4*T_CLK_ADS
+// Note: 4*T_CLK = 1.9532125us (512KHz)
+// 50 NOP for SYSCLK = 24MHz
+//-----------------------------------------------------------------------------
+void DelayForADS(void)
+{
+   while(SPI0CFG & SPI0CFG_SPIBSY__SET);
+}

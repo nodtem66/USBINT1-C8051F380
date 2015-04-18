@@ -45,7 +45,6 @@
 #include "USB0_InterruptServiceRoutine.h"
 #include "USB0_Descriptor.h"
 #include "USBINT1_Main.h"
-#include "UART1_ATCommand.h"
 #include "SPI0_TI.h"
 
 //-----------------------------------------------------------------------------
@@ -80,20 +79,31 @@ void main(void)
 
    System_Init ();                     // Initialize Sysclk, Port IO, Timer2, ADC0
    USB0_Init ();                       // Initialize USB0
-   //UART1_Init ();                      // Initial UART1
+   //UART1_Init ();                    // Initial UART1
    SPI0_Init();                        // Inital SPI0
    PCA0_Init();
 
-   IE_EA = 1;                             // Enable global interrupts
+   IE_EA = 1;                          // Enable global interrupts
    IE_EA = 1;
 
-   //Init AFE4490 Board
-   ADSInit();
+   Delay();
 
+   // wait at least 0.128 sec for ADS initialisation (ads1298 pp. 42)
+   // wait 9us (18t_clk) for reset pulse
+   ADSDelay(10);
+   ADSCommand(ADS_CMD_SDATAC);
+   Delay();
+   ADSInit();                          // Init ADS1298 board
+   Delay();
+   In_Packet[7]++;
+   In_Packet[4] = ADSRead(ADS_ID);
    while (1)
    {
       //ADSWrite(ADS_CONFIG1, ADS_CONFIG1__HIGH_RES_1K_SPS);
-      In_Packet[4] = ADSRead(ADS_ID);
-      Delay();
+      //In_Packet[4] = ADSRead(ADS_ID);
+      if (readySPI & READY_ADC_RDY)
+      {
+         readySPI &= ~READY_ADC_RDY;
+      }
    }
 }

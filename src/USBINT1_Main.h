@@ -62,6 +62,7 @@ void UART1_Init (void);
 void SPI0_Init (void);
 void PCA0_Init (void);
 void Delay (void);
+void DelayForADS (void);
 
 //-----------------------------------------------------------------------------
 // Interrupt Prototypes

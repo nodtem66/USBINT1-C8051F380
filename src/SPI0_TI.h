@@ -117,6 +117,7 @@ void AFE4490Init(void);
 // Commands
 #define ADS_CMD_WAKEUP  0x02
 #define ADS_CMD_STANDBY 0x04
+#define ADS_CMD_RESET   0x06
 #define ADS_CMD_START   0x08 // start data conversion
 #define ADS_CMD_STOP    0x0a // stop data conversion
 #define ADS_CMD_RDATAC  0x10 // Start read data continuous
@@ -126,32 +127,32 @@ void AFE4490Init(void);
 #define ADS_CMD_WREG    0x40 // write register
 
 // register address
-#define ADS_ID      0x00 // ID of ADS version
-#define ADS_CONFIG1 0x01
-#define ADS_CONFIG2 0x02
-#define ADS_CONFIG3 0x03
-#define ADS_LOFF    0x04 // Lead off
-#define ADS_CH1SET  0x05
-#define ADS_CH2SET  0x06
-#define ADS_CH3SET  0x07
-#define ADS_CH4SET  0x08
-#define ADS_CH5SET  0x09
-#define ADS_CH6SET  0x0A
-#define ADS_CH7SET  0x0B
-#define ADS_CH8SET  0x0C
-#define ADS_RLD_SENSP  0x0D // Right leg driven
-#define ADS_RLD_SENSN  0x0E // Right leg driven
-#define ADS_LOFF_SENSP 0x0F // Lead off
-#define ADS_LOFF_SENSN 0x10 // Lead off
-#define ADS_LOFF_FLIP  0x11 // Lead off
-#define ADS_LOFF_STATP 0x12 // Lead off status
-#define ADS_LOFF_STATN 0x13 // Lead off status
-#define ADS_GPIO    0x14 // general purpose input/output
-#define ADS_PACE    0x15 // PACE detection
-#define ADS_RESP    0x16 // respiratory
-#define ADS_CONFIG4 0x17
-#define ADS_WCT1    0x18 // Wilson central terminal
-#define ADS_WCT2    0x19 // Wilson central terminal
+#define ADS_ID          0x00 // ID of ADS version
+#define ADS_CONFIG1     0x01
+#define ADS_CONFIG2     0x02
+#define ADS_CONFIG3     0x03
+#define ADS_LOFF        0x04 // Lead off
+#define ADS_CH1SET      0x05
+#define ADS_CH2SET      0x06
+#define ADS_CH3SET      0x07
+#define ADS_CH4SET      0x08
+#define ADS_CH5SET      0x09
+#define ADS_CH6SET      0x0A
+#define ADS_CH7SET      0x0B
+#define ADS_CH8SET      0x0C
+#define ADS_RLD_SENSP   0x0D // Right leg driven
+#define ADS_RLD_SENSN   0x0E // Right leg driven
+#define ADS_LOFF_SENSP  0x0F // Lead off
+#define ADS_LOFF_SENSN  0x10 // Lead off
+#define ADS_LOFF_FLIP   0x11 // Lead off
+#define ADS_LOFF_STATP  0x12 // Lead off status
+#define ADS_LOFF_STATN  0x13 // Lead off status
+#define ADS_GPIO        0x14 // general purpose input/output
+#define ADS_PACE        0x15 // PACE detection
+#define ADS_RESP        0x16 // respiratory
+#define ADS_CONFIG4     0x17
+#define ADS_WCT1        0x18 // Wilson central terminal
+#define ADS_WCT2        0x19 // Wilson central terminal
 
 // CONFIG1: Configuration Register 1
 #define ADS_CONFIG1__HR       0x80
@@ -336,6 +337,7 @@ void AFE4490Init(void);
 //=============================================================================
 // ADS1298 Helper
 //=============================================================================
+void ADSDelay(U8);
 void ADSInit();
 void ADSCommand(U8);
 void ADSWrite(U8, U8);
@@ -350,17 +352,21 @@ U8 ADSRead(U8);
 // -------------------------------------------------------------
 // | CEX0_INT    | SPI_RX_CNT | SPI_TX_CNT | ...
 // -------------------------------------------------------------
-#define INEP0_AFE_RDY_CNT 0
+#define INEP0_ADC_RDY_CNT 0
 #define INEP0_SPI_RX_CNT  1
 #define INEP0_SPI_TX_CNT  2
 
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-extern U8 readySPI;      // flag 8 bit for SPI Communication
-extern U8 countADC_RDY;  // count for ADC_RDY triggers
-#define READY_SPI_END 1  // flag to trigger NSS
-#define READY_ADC_RDY 2  // flag to trigger Send SPI Read to AFE
+extern U8 readySPI;             // flag 8 bit for SPI Communication
+extern U8 countADC_RDY;         // count for ADC_RDY triggers
+extern U8 bufferSPI;
+extern volatile U8 countDelay;  // count for timer3 interrupts
+#define READY_SPI_END  1        // flag to trigger NSS
+#define READY_ADC_RDY  2        // flag to trigger Send SPI Read to AFE
+#define READY_SPI_READ 4        // flag to trigger SPI0_ISR read SPI0DAT
+
 //-----------------------------------------------------------------------------
 // Define macro
 //-----------------------------------------------------------------------------
@@ -369,12 +375,9 @@ extern U8 countADC_RDY;  // count for ADC_RDY triggers
 //-----------------------------------------------------------------------------
 #define WRITE_SPI(b) while(!SPI0CN_TXBMT); SPI0DAT = (b);
 #define READ_SPI(b) while(!SPI0CN_TXBMT); \
-      while((SPI0CFG & SPI0CFG_SPIBSY__SET)); \
-      SPI0DAT = 0; b = SPI0DAT;
-#define SPI_START() readySPI &= ~READY_SPI_END; SPI0CN_NSSMD0 = 0;
-#define SPI_END() while(!SPI0CN_TXBMT); readySPI |= READY_SPI_END;
-/*
-#define SPI_END() while(!SPI0CN_TXBMT); \
-   while((SPI0CFG & SPI0CFG_SPIBSY__SET)); \
-   readySPI |= READY_SPI_END; SPI0CN_NSSMD0 = 1;*/
+      while((SPI0CFG & SPI0CFG_SPIBSY__SET)); readySPI |= READY_SPI_READ; SPI0DAT = 0; \
+      while(readySPI & READY_SPI_READ); b = bufferSPI;
+#define SPI_START() SPI0CN_NSSMD0 = 0;
+#define SPI_END() while(!SPI0CN_TXBMT); while(SPI0CFG & SPI0CFG_SPIBSY__SET); TMR2CN_TR2 = 1;
+
 #endif /* SPI0_TI_H_ */
