@@ -402,7 +402,7 @@ void PCA0_Init(void)
    PCA0CN = 0; // reset and stop PCA0 counter/timer
    EIE1 |= EIE1_EPCA0__ENABLED;       // enable pca0 interrupts
    PCA0MD = PCA0MD_ECF__OVF_INT_DISABLED // disable overwrite counter/timer interrupt
-            | PCA0MD_CPS__SYSCLK; // use SYSCLK to PCA0 based clock
+            | PCA0MD_CPS__SYSCLK_DIV_12; // use SYSCLK to PCA0 based clock
    PCA0CPM0 = PCA0CPM0_CAPN__ENABLED  // enable Capture at falling edge
             | PCA0CPM0_ECCF__ENABLED; // enable capture/compare flag interrupt
    PCA0CN = PCA0CN_CR__RUN;           // run PCA counter/timer

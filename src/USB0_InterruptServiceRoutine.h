@@ -58,7 +58,7 @@
 
 // Can range 0 - 1024 depending on data and transfer type
 #define  OUT_EP1_PACKET_SIZE     0x0008
-#define  IN_EP3_PACKET_SIZE      0x0040
+#define  IN_EP3_PACKET_SIZE      27
 
 //-----------------------------------------------------------------------------
 // Standard Descriptor Types

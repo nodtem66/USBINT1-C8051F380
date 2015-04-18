@@ -44,14 +44,15 @@
 // Definitions
 //-----------------------------------------------------------------------------
 
-#define SYSCLOCK           24000000
-
+#define SYSCLOCK            24000000
+#define ADS_DATA_OUT_LENGTH 27
 //-----------------------------------------------------------------------------
 // External Global Variables
 //-----------------------------------------------------------------------------
 extern bit InPacketLock;
 extern bit OutPacketLock;
 extern bit In3PacketLock;
+extern SEGMENT_VARIABLE(ADS_Data_Out[ADS_DATA_OUT_LENGTH], U8, SEG_XDATA);
 //-----------------------------------------------------------------------------
 // Function Prototypes
 //-----------------------------------------------------------------------------

@@ -90,6 +90,7 @@ void ADSInit()
 
 
    // ECG Normal mode
+   /*
    ADSWrite(ADS_CONFIG2, 0x00);
    ADSWrite(ADS_WCT1, ADS_WCT1__PD_WCTA | ADS_WCT1__WCTA_CH2N);
    ADSWrite(ADS_WCT2, ADS_WCT2__PD_WCTB | ADS_WCT2__PD_WCTC
@@ -102,9 +103,10 @@ void ADSInit()
    ADSWrite(ADS_CH6SET, ADS_CHSET__GAIN_8X);
    ADSWrite(ADS_CH7SET, ADS_CHSET__GAIN_8X);
    ADSWrite(ADS_CH8SET, ADS_CHSET__GAIN_8X);
+   */
 
    // ECG Test mode
-   /*
+   //*
    ADSWrite(ADS_CONFIG2, ADS_CONFIG2__INT_TEST_4HZ);
    ADSWrite(ADS_WCT1, 0x00);
    ADSWrite(ADS_WCT2, 0x00);
@@ -116,5 +118,5 @@ void ADSInit()
    ADSWrite(ADS_CH1SET, ADS_CHSET__TEST_SIGNAL);
    ADSWrite(ADS_CH1SET, ADS_CHSET__TEST_SIGNAL);
    ADSWrite(ADS_CH1SET, ADS_CHSET__TEST_SIGNAL);
-   */
+   //*/
 }
