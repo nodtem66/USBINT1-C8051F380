@@ -39,7 +39,6 @@
 #include "USB0_InterruptServiceRoutine.h"
 #include "USB0_Register.h"
 #include "USBINT1_Main.h"
-#include "UART1_ATCommand.h"
 #include "SPI0_TI.h"
 
 #if TARGET_MCU != MCU_F380
@@ -70,13 +69,9 @@
 // Initialization Routines
 void Sysclk_Init(void);               // Initialize the system clock
 void Port_Init(void);                 // Configure ports
-void Timer2_Init(void);               // Configure Timer2
-void Timer3_Init(void);               // Configure Timer3
-void ADC0_Init(void);                 // Configure ADC0
 void USB0_Init(void);                 // Configure USB core
 void USB0_Suspend(void);              // Suspend System
 void Delay(void);                     // About 80us/1ms on Full/LowSpeed
-void UART1_Init(void);                // configure UART1
 void PCA0_Init(void);                 // configure PCA for external interrupts
 
 //-----------------------------------------------------------------------------
@@ -117,9 +112,6 @@ void System_Init(void)
 
    Sysclk_Init();                     // Initialize oscillator
    Port_Init();                       // Initialize crossbar and GPIO
-   Timer2_Init();                     // Initialize Timer2
-   Timer3_Init();                     // Initialize Timer3
-   //ADC0_Init ();                    // Initialize ADC0
 }
 
 //-----------------------------------------------------------------------------
@@ -155,25 +147,6 @@ void USB0_Init(void)
    POLL_WRITE_BYTE(POWER, POWER_ISOUD__SOF_TOKEN | POWER_SUSEN__ENABLED);
 }
 
-//-----------------------------------------------------------------------------
-// UART1_Init
-//-----------------------------------------------------------------------------
-// UART1 Initialize following step
-// - enable interrupts
-// - configure 9600/8E1
-void UART1_Init(void)
-{
-   EIE2 |= EIE2_ES1__ENABLED;          //enable UART1 Interrupt
-   SCON1 = SCON1_REN__RECEIVE_ENABLED; //enable UART1 reception
-   SMOD1 = SMOD1_PE__PARITY_ENABLED    //configure 8 bit even parity
-         | SMOD1_SDL__8_BITS | SMOD1_SPT__EVEN_PARITY;
-
-   SBRL1 = 0xFB1E;                     //configure buad rate for 9600
-   SBCON1 = SBCON1_SBRUN__ENABLED      //enable baud rate generator
-         | SBCON1_SBPS__DIV_BY_1;
-
-   SCON1 |= SCON1_TI__SET;             //set ready to TX
-}
 
 //-----------------------------------------------------------------------------
 // SPI_Init
@@ -336,76 +309,6 @@ void Port_Init(void)
    P0_B5 = 0;    // Reset P0.5 to 0
 }
 
-//-----------------------------------------------------------------------------
-// Timer2_Init
-//-----------------------------------------------------------------------------
-//
-// Return Value : None
-// Parameters   : None
-// 
-// Timer 2 reload, used to check if switch pressed on overflow and
-// used for ADC continuous conversion.
-//
-// Low-speed reload rate:  25 Hz
-// Full-speed reload rate: 50 Hz
-//
-//-----------------------------------------------------------------------------
-void Timer2_Init(void)
-{
-   TMR2CN = 0x00;           // Stop Timer2; Clear TF2;
-
-   CKCON &= ~0xF0;          // Timer2 clocked based on TMR2CN_T2XCLK (SYSCLK/12)
-   TMR2RL = 0x10000 - 40000;// Initialize reload value
-   TMR2 = 0xffff;           // Set to reload immediately
-
-   IE_ET2 = 1;              // Enable Timer2 interrupts
-   TMR2CN_TR2 = 1;          // Start Timer2
-}
-
-//-----------------------------------------------------------------------------
-// Timer3_Init
-//-----------------------------------------------------------------------------
-//
-// Return Value : None
-// Parameters   : None
-//
-// Timer 3 reload, used to check if timeout for UART1 9600
-// Timeout 10 msec (100Hz)
-//
-// Full-speed (SYSCLK: 24 MHz) reload rate: 100 Hz
-//
-//-----------------------------------------------------------------------------
-void Timer3_Init(void)
-{
-   TMR3CN = 0x00;            // Stop Timer3; Clear TF3;
-   TMR3RL = 0x10000 - 20000; // Timer3 clocked based on TMR3CN_T2XCLK (SYSCLK/12)
-   TMR3 = TMR3RL;            // set to reload imediately
-   EIE1 |= EIE1_ET3__ENABLED;// enable Timer3 interrupts
-   TMR3CN = TMR3CN_TR3__RUN; // start Timer3
-}
-
-//-----------------------------------------------------------------------------
-// ADC0_Init
-//-----------------------------------------------------------------------------
-//
-// Return Value : None
-// Parameters   : None
-// 
-// Configures ADC for single ended continuous conversion or Timer2
-//-----------------------------------------------------------------------------
-void ADC0_Init(void)
-{
-   REF0CN = 0x0E; // Enable voltage reference VREF
-   AMX0P = 0x1E;  // Positive input starts as temp sensor
-   AMX0N = 0x1F;  // Single ended mode(neginput = gnd)
-
-   ADC0CF = 0xF8; // SAR Period 0x1F, Right adjusted
-
-   ADC0CN = 0xC2; // Continuous converion on timer 2
-                  // overflow; low power tracking mode on
-
-   EIE1 |= 0x08;  // Enable conversion complete interrupt
-}
 
 void PCA0_Init(void)
 {
@@ -450,68 +353,6 @@ INTERRUPT (Timer3_ISR, TIMER3_IRQn)
    //begin_state_machine();
 }
 
-//-----------------------------------------------------------------------------
-// ADC0_ConvComplete_ISR
-//-----------------------------------------------------------------------------
-//
-// Called after a conversion of the ADC has finished
-// Updates the appropriate variable for potentiometer or temperature sensor
-// Switches the ADC multiplexor value to switch between the potentiometer 
-// and temp sensor
-//
-//-----------------------------------------------------------------------------
-INTERRUPT (ADC0_ConvComplete_ISR, ADC0EOC_IRQn)
-{
-   S16 temp;
-
-   // This switches the AMUX between the temperature sensor and the
-   // potentiometer pin after conversion
-   if (AMX0P == 0x1E)
-   {
-      // Add offset to Temperature
-      temp = (ADC0H << 8) + ADC0L;
-      temp += TEMP_ADD;
-      Temperature = (U8) temp;
-   }
-
-   ADC0CN_ADINT = 0;
-}
-
-//-----------------------------------------------------------------------------
-// UART1_ISR
-//-----------------------------------------------------------------------------
-//
-// called when TX/RX signal on UART1
-//
-//-----------------------------------------------------------------------------
-INTERRUPT(UART1_ISR, UART1_IRQn)
-{
-   if (SCON1 & SCON1_TI__SET)
-   {
-      P0_B3 ^= 1; // Toggle P0.3 bit
-      SCON1 &= ~SCON1_TI__SET; // clear tx flag
-      send_next_char_isr();
-   }
-   if (SCON1 & SCON1_RI__SET)
-   {
-      if (SCON1 & SCON1_OVR__SET) // if RX FIFO full
-      {
-         SCON1 &= ~SCON1_OVR__SET; // clear RX FIFO overrun flag
-         //send_error(ERROR_FULL_FIFO); //send error to client
-      }
-      if (SCON1 & SCON1_PERR__SET) // if invalid parity bit
-      {
-         SCON1 &= ~SCON1_PERR__SET; // clear flag
-         //send_error(ERROR_PARITY); //send error to client
-      }
-
-      read_char_isr();
-      while (SCON1 & SCON1_RI__SET) // if FIFO is not empty, rx will not clear
-      {
-         read_char_isr();
-      }
-   }
-}
 //-----------------------------------------------------------------------------
 // SPI0_ISR
 //-----------------------------------------------------------------------------

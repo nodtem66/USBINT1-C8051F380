@@ -45,7 +45,6 @@
 #include "USB0_InterruptServiceRoutine.h"
 #include "USB0_Descriptor.h"
 #include "USBINT1_Main.h"
-#include "UART1_ATCommand.h"
 #include "SPI0_TI.h"
 
 //-----------------------------------------------------------------------------
@@ -84,7 +83,6 @@ void main(void)
 
    System_Init ();                     // Initialize Sysclk, Port IO, Timer2, ADC0
    USB0_Init ();                       // Initialize USB0
-   UART1_Init ();                      // Initial UART1
    SPI0_Init();                        // Inital SPI0
    PCA0_Init();
 
@@ -113,11 +111,6 @@ void main(void)
 
            // countADC_RDY = 0;
          //}
-      }
-      if (readyUART1 & READY_READ)
-      {
-         //P0_B4 ^= 1;
-         run_state_machine ();
       }
    }
 }
