@@ -89,18 +89,18 @@
 #define LED2ABSVAL   0x2e // (LED2 - Ambient) sample value
 #define LED1ABSVAL   0x2f // (LED1 - Ambient) sample value
 #define DIAG         0x30 // Diagnostic flag register
-#define DIAG_PD_ALM   1 << 12 // power-down alarm status
-#define DIAG_LED_ALM  1 << 11 // LED alarm
-#define DIAG_LED1OPEN 1 << 10 // LED1 Open
-#define DIAG_LED2OPEN 1 << 9  // LED2 Open
-#define DIAG_LEDSC    1 << 8  // LED Short
-#define DIAG_OUTPSHGND 1 << 7 // OUTP short to ground
-#define DIAG_OUTNSHGND 1 << 6 // OUTN short to groud
-#define DIAG_PDOC      1 << 5 // PD Open circuit
-#define DIAG_PDSC      1 << 4 // PD Short circuit
-#define DIAG_INNSCGND  1 << 3 // INN to GND
-#define DIAG_INPSCGND  1 << 2 // INP to GND
-#define DIAG_INNSCLED  1 << 1 // INN to LED
+#define DIAG_PD_ALM   (1 << 12) // power-down alarm status
+#define DIAG_LED_ALM  (1 << 11) // LED alarm
+#define DIAG_LED1OPEN (1 << 10) // LED1 Open
+#define DIAG_LED2OPEN (1 << 9)  // LED2 Open
+#define DIAG_LEDSC    (1 << 8)  // LED Short
+#define DIAG_OUTPSHGND (1 << 7) // OUTP short to ground
+#define DIAG_OUTNSHGND (1 << 6) // OUTN short to ground
+#define DIAG_PDOC      (1 << 5) // PD Open circuit
+#define DIAG_PDSC      (1 << 4) // PD Short circuit
+#define DIAG_INNSCGND  (1 << 3) // INN to GND
+#define DIAG_INPSCGND  (1 << 2) // INP to GND
+#define DIAG_INNSCLED  (1 << 1) // INN to LED
 #define DIAG_INPSCLED  1      // INP to LED
 //=============================================================================
 // AFE4490 Helper
@@ -108,6 +108,7 @@
 void AFE4490Write(U8, U32);
 U32 AFE4490Read(U8);
 void AFE4490Init(void);
+void AFE4490Init2(void);
 //=============================================================================
 // SPI Helper
 //=============================================================================
@@ -127,8 +128,10 @@ void AFE4490Init(void);
 //-----------------------------------------------------------------------------
 extern U8 readySPI;      // flag 8 bit for SPI Communication
 extern U8 countADC_RDY;  // count for ADC_RDY triggers
+extern U8 bufferSPI;
 #define READY_SPI_END 1  // flag to trigger NSS
 #define READY_ADC_RDY 2  // flag to trigger Send SPI Read to AFE
+#define READY_SPI_READ 4 // flag to read SPI from ISR
 //-----------------------------------------------------------------------------
 // Define macro
 //-----------------------------------------------------------------------------
@@ -136,14 +139,11 @@ extern U8 countADC_RDY;  // count for ADC_RDY triggers
 //    wait for busy transmit holding register and write a byte to SPI
 //-----------------------------------------------------------------------------
 #define WRITE_SPI(b) while(!SPI0CN_TXBMT); SPI0DAT = (b);
-#define READ_SPI(b) while(!SPI0CN_TXBMT); SPI0DAT = 0;\
-      while((SPI0CFG & SPI0CFG_SPIBSY__SET)); b = SPI0DAT;
-#define SPI_START() readySPI &= ~READY_SPI_END; SPI0CN_NSSMD0 = 0;
+#define READ_SPI(b) while(!SPI0CN_TXBMT);\
+      while((SPI0CFG & SPI0CFG_SPIBSY__SET)); readySPI |= READY_SPI_READ; SPI0DAT = 0;\
+      while(readySPI & READY_SPI_READ); b = bufferSPI;
+#define SPI_START() SPI0CN_NSSMD0 = 0;
 #define SPI_END() while(!SPI0CN_TXBMT); \
-      while((SPI0CFG & SPI0CFG_SPIBSY__SET)); \
-      SPI0CN_NSSMD0 = 1;//readySPI |= READY_SPI_END;
-/*
-#define SPI_END() while(!SPI0CN_TXBMT); \
-   while((SPI0CFG & SPI0CFG_SPIBSY__SET)); \
-   readySPI |= READY_SPI_END; SPI0CN_NSSMD0 = 1;*/
+   while((SPI0CFG & SPI0CFG_SPIBSY__SET)); SPI0CN_NSSMD0 = 1;
+
 #endif /* SPI0_TI_H_ */

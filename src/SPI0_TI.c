@@ -13,6 +13,7 @@
 // SPI flag to trigger NSS
 U8 readySPI;
 U8 countADC_RDY=0;
+U8 bufferSPI=0;
 
 // AFE4490Write(address, data)
 // write the 24bit data to 8bit address
@@ -45,11 +46,11 @@ U32 AFE4490Read(U8 Address)
    SPI_START(); // enable device
    WRITE_SPI(Address); // send address 8 bit
    READ_SPI(buffer); // get first MSB 8bit
-   Data = ((buffer << 16) & 0xFF0000);
+   Data = (buffer << 8);
    READ_SPI(buffer); // get middle 8 bit
-   Data |= ((buffer << 8) & 0x00FF00);
+   Data = (Data | buffer) << 8;
    READ_SPI(buffer); // get LSB 8 bit
-   Data |= (buffer & 0x0000FF);
+   Data |= buffer;
    SPI_END(); // disable device
    In_Packet[INEP0_SPI_RX_CNT]++;
    return Data;
@@ -117,7 +118,46 @@ void AFE4490Init() {
    AFE4490Write(CONTROL1, CONTROL1_TIMEREN_SET | (CONTROL1_AVERAGE_MARK & 9));
    AFE4490Write(TIAGAIN, 0);
    AFE4490Write(TIA_AMB_GAIN, 0);
-   AFE4490Write(LEDCNTRL, 0x003030); // LED Bightness config
+   AFE4490Write(LEDCNTRL, 0x0003030); // LED Bightness config
 
    AFE4490Write(CONTROL0, CONTROL0_SPI_READ); // switch to SPI_READ mode
+}
+
+void AFE4490Init2()
+{
+   AFE4490Write(CONTROL0, 0x000000);
+   AFE4490Write(CONTROL2, 0x000000);
+   AFE4490Write(LED2STC, 0X001770); //timer control
+   AFE4490Write(LED2ENDC,0X001DAF); //timer control
+   AFE4490Write(LED2LEDSTC,0X001770); //timer control
+   AFE4490Write(LED2LEDENDC,0X001DAF); //timer control
+   AFE4490Write(ALED2STC, 0X000000); //timer control
+   AFE4490Write(ALED2ENDC, 0X00063F); //timer control
+   AFE4490Write(LED1STC, 0X0007D0); //timer control
+   AFE4490Write(LED1ENDC, 0X000E0F); //timer control
+   AFE4490Write(LED1LEDSTC, 0X0007D0); //timer control
+   AFE4490Write(LED1LEDENDC, 0X000E0F); //timer control
+   AFE4490Write(ALED1STC, 0X000FA0); //timer control
+   AFE4490Write(ALED1ENDC, 0X0015DF); //timer control
+   AFE4490Write(LED2CONVST,0X000002); //timer control
+   AFE4490Write(LED2CONVEND, 0X0007CF); //timer control
+   AFE4490Write(ALED2CONVST, 0X0007D2); //timer control
+   AFE4490Write(ALED2CONVEND,0X000F9F); //timer control
+   AFE4490Write(LED1CONVST, 0X000FA2); //timer control
+   AFE4490Write(LED1CONVEND, 0X001F3F); //timer control
+   AFE4490Write(ALED1CONVST, 0X001772); //timer control
+   AFE4490Write(ALED1CONVEND, 0X001F3F); //timer control
+   AFE4490Write(ADCRSTCNT0, 0X000000); //timer control
+   AFE4490Write(ADCRSTENDCT0,0X000000); //timer control
+   AFE4490Write(ADCRSTCNT1, 0X0007D0); //timer control
+   AFE4490Write(ADCRSTENDCT1, 0X0007D0); //timer control
+   AFE4490Write(ADCRSTCNT2, 0X000FA0); //timer control
+   AFE4490Write(ADCRSTENDCT2, 0X000FA0); //timer control
+   AFE4490Write(ADCRSTCNT3, 0X001770); //timer control
+   AFE4490Write(ADCRSTENDCT3, 0X001770);//timer control
+   AFE4490Write(PRPCOUNT, 0X001F3F);//timer control
+   AFE4490Write(CONTROL1,0x000107);      // Timers ON, average 3 samples
+   AFE4490Write(TIAGAIN,0x000000);
+   AFE4490Write(TIA_AMB_GAIN,0x000000);
+   AFE4490Write(LEDCNTRL,0x0018080);     // LED_RANGE=100mA, LED=50mA
 }

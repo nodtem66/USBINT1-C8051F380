@@ -372,6 +372,11 @@ INTERRUPT (SPI0_ISR, SPI0_IRQn)
    {
       SPI0CN_SPIF = 0;
       SPI0CN_MODF = 0;
+      if (readySPI & READY_SPI_READ)
+      {
+         readySPI &= ~READY_SPI_READ;
+         bufferSPI = SPI0DAT;
+      }
       // if last byte to transfer
       if (readySPI & READY_SPI_END)
       {
